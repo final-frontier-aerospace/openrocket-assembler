@@ -1,6 +1,7 @@
 buildscript {
     dependencies {
         classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.13"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10"
     }
 
     repositories {
@@ -10,47 +11,23 @@ buildscript {
 
 apply plugin: "application"
 apply plugin: "com.google.protobuf"
-apply plugin: "eclipse"
-apply plugin: "idea"
 apply plugin: "java"
+apply plugin: "kotlin"
 
 group = "com.ffaero"
 version = "1.0.0"
 
 application {
-    mainClass = "com.ffaero.openrocketassembler.Main"
+    mainClass = "com.ffaero.openrocketassembler.MainKt"
 }
 
 dependencies {
     implementation "com.google.protobuf:protobuf-java:3.13.0"
 }
 
-eclipse {
-    project {
-        name = "OpenRocket Assembler"
-    }
-
-    classpath {
-        downloadSources = true
-        downloadJavadoc = true
-    }
-}
-
-idea {
-    project {
-        vcs = "Git"
-    }
-
-    module {
-        name = "OpenRocket Assembler"
-        downloadSources = true
-        downloadJavadoc = true
-    }
-}
-
 jar {
     manifest {
-        attributes "Main-Class": "com.ffaero.openrocketassembler.Main"
+        attributes "Main-Class": "com.ffaero.openrocketassembler.MainKt"
     }
 }
 
