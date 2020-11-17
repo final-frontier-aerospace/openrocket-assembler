@@ -13,6 +13,7 @@ class Application {
 		override fun onProjectModified(sender: Project, modified: Boolean) = listeners.forEach { it.onProjectModified(sender, modified) }
 		override fun onProjectLoaded(sender: Project) = listeners.forEach { it.onProjectLoaded(sender) }
 		override fun onProjectSaved(sender: Project) = listeners.forEach { it.onProjectSaved(sender) }
+		override fun onProjectOpenRocketVersionChanged(sender: Project, oldVersion: String, newVersion: String) = listeners.forEach { it.onProjectOpenRocketVersionChanged(sender, oldVersion, newVersion) }
 		override fun onProjectComponentAdded(sender: Project, component: Component, index: Int) = listeners.forEach { it.onProjectComponentAdded(sender, component, index) }
 		override fun onProjectComponentRemoved(sender: Project, component: Component, index: Int) = listeners.forEach { it.onProjectComponentRemoved(sender, component, index) }
 		override fun onProjectConfigurationAdded(sender: Project, configuration: Configuration, index: Int) = listeners.forEach { it.onProjectConfigurationAdded(sender, configuration, index) }

@@ -12,6 +12,7 @@ interface ApplicationListener {
 	fun onProjectModified(sender: Project, modified: Boolean)
 	fun onProjectLoaded(sender: Project)
 	fun onProjectSaved(sender: Project)
+	fun onProjectOpenRocketVersionChanged(sender: Project, oldVersion: String, newVersion: String)
 	fun onProjectComponentAdded(sender: Project, component: Component, index: Int)
 	fun onProjectComponentRemoved(sender: Project, component: Component, index: Int)
 	fun onProjectConfigurationAdded(sender: Project, configuration: Configuration, index: Int)

@@ -100,6 +100,16 @@ class Project(app: Application, private var _file: File) {
 			return v
 		}
 	
+	public var openRocketVersion: String
+		get() = data.openRocketVersion
+		set(value) {
+			val openRocketVersion = openRocketVersion
+			if (value != openRocketVersion) {
+				data.openRocketVersion = value
+				dispatcher.onProjectOpenRocketVersionChanged(this, openRocketVersion, value)
+			}
+		}
+	
 	public val components: MutableList<Component> = ComponentList(app, this)
 	
 	public val configurations: MutableList<Configuration> = ConfigurationList(app, this)

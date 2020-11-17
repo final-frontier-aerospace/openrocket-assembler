@@ -6,6 +6,7 @@ import "Configuration.proto";
 
 message Project {
 	fixed64 nextID = 1;
-    repeated Component components = 2;
-    repeated Configuration configurations = 3;
+	string openRocketVersion = 2;
+    repeated Component components = 3;
+    repeated Configuration configurations = 4;
 }
