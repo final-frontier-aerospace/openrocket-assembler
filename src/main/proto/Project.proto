@@ -1,0 +1,11 @@
+syntax = "proto3";
+package com.ffaero.openrocketassembler.model.proto;
+
+import "Component.proto";
+import "Configuration.proto";
+
+message Project {
+	fixed64 nextID = 1;
+    repeated Component components = 2;
+    repeated Configuration configurations = 3;
+}
