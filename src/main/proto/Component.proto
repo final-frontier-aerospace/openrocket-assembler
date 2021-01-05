@@ -1,8 +1,0 @@
-syntax = "proto3";
-package com.ffaero.openrocketassembler.model.proto;
-
-message Component {
-    fixed64 id = 1;
-    string name = 2;
-    string path = 3;
-}

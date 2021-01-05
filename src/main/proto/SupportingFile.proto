@@ -1,7 +1,0 @@
-syntax = "proto3";
-package com.ffaero.openrocketassembler.model.proto;
-
-message SupportingFile {
-    string path = 1;
-    bytes content = 2;
-}
