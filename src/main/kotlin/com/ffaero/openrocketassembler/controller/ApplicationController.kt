@@ -1,21 +1,9 @@
 package com.ffaero.openrocketassembler.controller
 
+import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
+import java.io.File
+
 class ApplicationController : ControllerBase<ApplicationListener, ApplicationListenerList>(ApplicationListenerList()) {
-	private var state = ApplicationState.Initializing
-	
-	public fun start() {
-		if (state != ApplicationState.Initializing) {
-			throw IllegalStateException("Cannot start controller multiple times")
-		}
-		state = ApplicationState.Running
-		listener.onStart(this)
-	}
-	
-	public fun stop() {
-		if (state == ApplicationState.Exited) {
-			throw IllegalStateException("Cannot stop controller multiple times")
-		}
-		state = ApplicationState.Exited
-		listener.onStop(this)
-	}
+	public fun addProject(model: Project.Builder, file: File?) = listener.onProjectAdded(this, ProjectController(this, model, file))
+	internal fun removeProject(proj: ProjectController) = listener.onProjectRemoved(this, proj)
 }

@@ -1,6 +1,6 @@
 package com.ffaero.openrocketassembler.controller
 
 open class ApplicationAdapter : ApplicationListener {
-	override fun onStart(sender: ApplicationController) = Unit
-	override fun onStop(sender: ApplicationController) = Unit
+	override fun onProjectAdded(sender: ApplicationController, project: ProjectController) = Unit
+	override fun onProjectRemoved(sender: ApplicationController, project: ProjectController) = Unit
 }

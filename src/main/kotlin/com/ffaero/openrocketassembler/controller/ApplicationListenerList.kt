@@ -1,6 +1,6 @@
 package com.ffaero.openrocketassembler.controller
 
 class ApplicationListenerList : HashSet<ApplicationListener>(), ApplicationListener {
-	override fun onStart(sender: ApplicationController) = forEach { it.onStart(sender) }
-	override fun onStop(sender: ApplicationController) = forEach { it.onStop(sender) }
+	override fun onProjectAdded(sender: ApplicationController, project: ProjectController) = forEach { it.onProjectAdded(sender, project) }
+	override fun onProjectRemoved(sender: ApplicationController, project: ProjectController) = forEach { it.onProjectRemoved(sender, project) }
 }

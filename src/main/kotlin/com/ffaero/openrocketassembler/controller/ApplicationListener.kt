@@ -1,6 +1,6 @@
 package com.ffaero.openrocketassembler.controller
 
 interface ApplicationListener {
-	fun onStart(sender: ApplicationController)
-	fun onStop(sender: ApplicationController)
+	fun onProjectAdded(sender: ApplicationController, project: ProjectController)
+	fun onProjectRemoved(sender: ApplicationController, project: ProjectController)
 }
