@@ -1,16 +1,16 @@
 package com.ffaero.openrocketassembler.view
 
 import javax.swing.JFrame
+import com.ffaero.openrocketassembler.view.menu.WindowMenu
 import java.awt.event.WindowEvent
 import java.awt.Dimension
 import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.controller.ProjectAdapter
-import com.ffaero.openrocketassembler.controller.ApplicationController
 import javax.swing.JMenuBar
 import java.awt.event.WindowListener
 import com.ffaero.openrocketassembler.view.menu.FileMenu
+import java.io.File
 import javax.swing.UIManager
-import com.ffaero.openrocketassembler.view.menu.WindowMenu
 
 class ApplicationView(private val view: ViewManager, private val proj: ProjectController) {
 	private val frame = JFrame().apply {
@@ -19,7 +19,6 @@ class ApplicationView(private val view: ViewManager, private val proj: ProjectCo
 		extendedState = JFrame.MAXIMIZED_BOTH
 		preferredSize = Dimension(1024, 768)
 		size = preferredSize
-		title = "OpenRocket Assembler"
 		addWindowListener(object : WindowListener {
 			override fun windowActivated(e: WindowEvent?) = Unit
 			override fun windowClosed(e: WindowEvent?) = Unit
@@ -33,7 +32,7 @@ class ApplicationView(private val view: ViewManager, private val proj: ProjectCo
 	}
 	
 	private val menu = JMenuBar().apply {
-		add(FileMenu(view, proj))
+		add(FileMenu(view, frame, proj))
 		add(WindowMenu(proj))
 		frame.setJMenuBar(this)
 	}
@@ -51,6 +50,16 @@ class ApplicationView(private val view: ViewManager, private val proj: ProjectCo
 		}
 		proj.addListener(object : ProjectAdapter() {
 			override fun onStop(sender: ProjectController) = frame.dispose()
+			
+			override fun onFileChange(sender: ProjectController, file: File?) {
+				if (file == null) {
+					frame.title = "OpenRocket Assembler"
+				} else {
+					frame.title = "OpenRocket Assembler - " + file.getName()
+				}
+			}
+		}.apply {
+			onFileChange(proj, proj.file)
 		})
 	}
 }
