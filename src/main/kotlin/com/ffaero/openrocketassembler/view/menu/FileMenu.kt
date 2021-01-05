@@ -17,24 +17,18 @@ import java.io.IOException
 import javax.swing.JOptionPane
 import com.google.protobuf.InvalidProtocolBufferException
 import java.io.File
+import com.ffaero.openrocketassembler.FileFormat
 
 class FileMenu(private val view: ViewManager, private val parent: Component, private val proj: ProjectController) : JMenu("File") {
-	companion object {
-		private const val extension = "orka"
-	}
-	
 	private val fileChooser = JFileChooser().apply {
 		setCurrentDirectory(File("."))
-		setFileFilter(FileNameExtensionFilter("OpenRocket Assembly File (*." + extension + ")", extension))
+		setFileFilter(FileNameExtensionFilter("OpenRocket Assembly File (*." + FileFormat.extension + ")", FileFormat.extension))
 	}
 	
 	private val newMenu = JMenuItem("New").apply {
 		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK))
 		addActionListener(object : ActionListener {
-			override fun actionPerformed(e: ActionEvent?) {
-				proj.file = null
-				proj.reset()
-			}
+			override fun actionPerformed(e: ActionEvent?) = proj.reset()
 		})
 		this@FileMenu.add(this)
 	}
@@ -49,6 +43,15 @@ class FileMenu(private val view: ViewManager, private val parent: Component, pri
 						try {
 							proj.load(file)
 							proj.file = file
+							if (proj.lastSavedVersion < FileFormat.version) {
+								if (JOptionPane.showConfirmDialog(parent, "Project was saved in an older version of OpenRocket Assembler.  Open anyways?", "Open", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+									proj.reset()
+								}
+							} else if (proj.lastSavedVersion > FileFormat.version) {
+								if (JOptionPane.showConfirmDialog(parent, "Project was saved in a newer version of OpenRocket Assembler.  Open anyways?", "Open", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+									proj.reset()
+								}
+							}
 						} catch (ex: FileNotFoundException) {
 							JOptionPane.showMessageDialog(parent, "Could not find file:\n" + file.getPath(), "Open", JOptionPane.ERROR_MESSAGE)
 						} catch (ex: InvalidProtocolBufferException) {
@@ -69,7 +72,7 @@ class FileMenu(private val view: ViewManager, private val parent: Component, pri
 			file = fileChooser.getSelectedFile()
 			if (file != null) {
 				if (!file.getName().contains('.')) {
-					file = File(file.getPath() + "." + extension)
+					file = File(file.getPath() + "." + FileFormat.extension)
 				}
 				if (file.exists()) {
 					if (JOptionPane.showConfirmDialog(parent, "File already exists.  Overwrite?", "Save", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {

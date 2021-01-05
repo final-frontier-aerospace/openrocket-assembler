@@ -2,4 +2,5 @@ syntax = "proto3";
 package com.ffaero.openrocketassembler.model.proto;
 
 message Project {
+    uint32 version = 1;
 }
