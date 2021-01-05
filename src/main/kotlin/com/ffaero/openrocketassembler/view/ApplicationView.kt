@@ -11,8 +11,14 @@ import java.awt.event.WindowListener
 import com.ffaero.openrocketassembler.view.menu.FileMenu
 import java.io.File
 import javax.swing.UIManager
+import com.ffaero.openrocketassembler.view.menu.OpenRocketMenu
+import javax.swing.JOptionPane
+import javax.swing.JFileChooser
+import com.ffaero.openrocketassembler.FileFormat
+import javax.swing.filechooser.FileNameExtensionFilter
+import java.io.IOException
 
-class ApplicationView(private val view: ViewManager, private val proj: ProjectController) {
+class ApplicationView(internal val view: ViewManager, private val proj: ProjectController) {
 	private val frame = JFrame().apply {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE)
@@ -31,14 +37,84 @@ class ApplicationView(private val view: ViewManager, private val proj: ProjectCo
 		})
 	}
 	
+	internal val fileChooser = JFileChooser().apply {
+		setCurrentDirectory(File("."))
+		setFileFilter(FileNameExtensionFilter("OpenRocket Assembly File (*." + FileFormat.extension + ")", FileFormat.extension))
+	}
+	
 	private val menu = JMenuBar().apply {
-		add(FileMenu(view, frame, proj))
-		add(WindowMenu(proj))
+		add(FileMenu(this@ApplicationView, frame, proj))
+		add(OpenRocketMenu(frame, proj))
+		add(WindowMenu(this@ApplicationView, proj))
 		frame.setJMenuBar(this)
 	}
 	
+	public fun saveProject(hint: File?, title: String): Boolean {
+		var file = hint
+		if (file == null) {
+			if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
+				file = fileChooser.getSelectedFile()
+				if (file != null) {
+					if (!file.getName().contains('.')) {
+						file = File(file.getPath() + "." + FileFormat.extension)
+					}
+					if (file.exists()) {
+						if (JOptionPane.showConfirmDialog(frame, "File already exists.  Overwrite?", title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+							file = null
+						}
+					}
+				}
+			}
+		}
+		if (file != null) {
+			try {
+				proj.save(file)
+				proj.file = file
+				return true
+			} catch (ex: IOException) {
+				JOptionPane.showMessageDialog(frame, "Could not save file:\n" + ex.message, title, JOptionPane.ERROR_MESSAGE)
+			}
+		}
+		return false
+	}
+	
+	public fun closeThen(title: String, action: String, func: Runnable) {
+		if (proj.modified) {
+			when (JOptionPane.showConfirmDialog(frame, "Project has unsaved changes.\nSave before " + action + "?", title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
+				JOptionPane.YES_OPTION -> {
+					if (saveProject(proj.file, title)) {
+						func.run()
+					}
+				}
+				JOptionPane.NO_OPTION -> {
+					func.run()
+				}
+			}
+		} else {
+			func.run()
+		}
+	}
+	
 	public fun close() {
-		proj.stop()
+		closeThen("Close", "closing window") {
+			proj.stop()
+		}
+	}
+	
+	private fun updateTitle(modified: Boolean, file: File?) {
+		if (file == null) {
+			if (modified) {
+				frame.title = "OpenRocket Assembler *"
+			} else {
+				frame.title = "OpenRocket Assembler"
+			}
+		} else {
+			if (modified) {
+				frame.title = "OpenRocket Assembler - " + file.getName() + "*"
+			} else {
+				frame.title = "OpenRocket Assembler - " + file.getName()
+			}
+		}
 	}
 	
 	init {
@@ -50,14 +126,8 @@ class ApplicationView(private val view: ViewManager, private val proj: ProjectCo
 		}
 		proj.addListener(object : ProjectAdapter() {
 			override fun onStop(sender: ProjectController) = frame.dispose()
-			
-			override fun onFileChange(sender: ProjectController, file: File?) {
-				if (file == null) {
-					frame.title = "OpenRocket Assembler"
-				} else {
-					frame.title = "OpenRocket Assembler - " + file.getName()
-				}
-			}
+			override fun onStatus(sender: ProjectController, modified: Boolean) = updateTitle(modified, proj.file)
+			override fun onFileChange(sender: ProjectController, file: File?) = updateTitle(proj.modified, file)
 		}.apply {
 			onFileChange(proj, proj.file)
 		})

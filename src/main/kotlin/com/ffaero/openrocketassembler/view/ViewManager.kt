@@ -17,6 +17,9 @@ class ViewManager(app: ApplicationController) {
 			
 			override fun onProjectRemoved(sender: ApplicationController, project: ProjectController) {
 				views.remove(project)
+				if (views.isEmpty()) {
+					app.stop()
+				}
 			}
 		})
 	}

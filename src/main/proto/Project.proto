@@ -3,4 +3,5 @@ package com.ffaero.openrocketassembler.model.proto;
 
 message Project {
     uint32 version = 1;
+    string openRocketVersion = 2;
 }

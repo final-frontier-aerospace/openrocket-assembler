@@ -18,17 +18,15 @@ import javax.swing.JOptionPane
 import com.google.protobuf.InvalidProtocolBufferException
 import java.io.File
 import com.ffaero.openrocketassembler.FileFormat
+import com.ffaero.openrocketassembler.view.ApplicationView
 
-class FileMenu(private val view: ViewManager, private val parent: Component, private val proj: ProjectController) : JMenu("File") {
-	private val fileChooser = JFileChooser().apply {
-		setCurrentDirectory(File("."))
-		setFileFilter(FileNameExtensionFilter("OpenRocket Assembly File (*." + FileFormat.extension + ")", FileFormat.extension))
-	}
-	
+class FileMenu(private val view: ApplicationView, private val parent: Component, private val proj: ProjectController) : JMenu("File") {
 	private val newMenu = JMenuItem("New").apply {
 		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK))
 		addActionListener(object : ActionListener {
-			override fun actionPerformed(e: ActionEvent?) = proj.reset()
+			override fun actionPerformed(e: ActionEvent?) = view.closeThen("New", "creating new project") {
+				proj.reset()
+			}
 		})
 		this@FileMenu.add(this)
 	}
@@ -36,9 +34,9 @@ class FileMenu(private val view: ViewManager, private val parent: Component, pri
 	private val openMenu = JMenuItem("Open").apply {
 		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK))
 		addActionListener(object : ActionListener {
-			override fun actionPerformed(e: ActionEvent?) {
-				if (fileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
-					val file = fileChooser.getSelectedFile()
+			override fun actionPerformed(e: ActionEvent?) = view.closeThen("Open", "opening other project") {
+				if (view.fileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
+					val file = view.fileChooser.getSelectedFile()
 					if (file != null) {
 						try {
 							proj.load(file)
@@ -66,44 +64,11 @@ class FileMenu(private val view: ViewManager, private val parent: Component, pri
 		this@FileMenu.add(this)
 	}
 	
-	private fun saveDialog(): File? {
-		var file: File? = null
-		if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-			file = fileChooser.getSelectedFile()
-			if (file != null) {
-				if (!file.getName().contains('.')) {
-					file = File(file.getPath() + "." + FileFormat.extension)
-				}
-				if (file.exists()) {
-					if (JOptionPane.showConfirmDialog(parent, "File already exists.  Overwrite?", "Save", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
-						file = null
-					}
-				}
-			}
-		}
-		return file
-	}
-	
-	private fun doSave(file: File) {
-		try {
-			proj.save(file)
-			proj.file = file
-		} catch (ex: IOException) {
-			JOptionPane.showMessageDialog(parent, "Could not save file:\n" + ex.message, "Save", JOptionPane.ERROR_MESSAGE)
-		}
-	}
-	
 	private val saveMenu = JMenuItem("Save").apply {
 		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK))
 		addActionListener(object : ActionListener {
 			override fun actionPerformed(e: ActionEvent?) {
-				var file = proj.file
-				if (file == null) {
-					file = saveDialog()
-				}
-				if (file != null) {
-					doSave(file)
-				}
+				view.saveProject(proj.file, "Save")
 			}
 		})
 		this@FileMenu.add(this)
@@ -113,10 +78,7 @@ class FileMenu(private val view: ViewManager, private val parent: Component, pri
 		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK))
 		addActionListener(object : ActionListener {
 			override fun actionPerformed(e: ActionEvent?) {
-				val file = saveDialog()
-				if (file != null) {
-					doSave(file)
-				}
+				view.saveProject(null, "Save As")
 			}
 		})
 		this@FileMenu.add(this)
@@ -125,7 +87,7 @@ class FileMenu(private val view: ViewManager, private val parent: Component, pri
 	
 	private val exitMenu = JMenuItem("Exit").apply {
 		addActionListener(object : ActionListener {
-			override fun actionPerformed(e: ActionEvent?) = view.exit()
+			override fun actionPerformed(e: ActionEvent?) = view.view.exit()
 		})
 		this@FileMenu.add(this)
 	}

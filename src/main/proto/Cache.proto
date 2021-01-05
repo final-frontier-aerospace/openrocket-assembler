@@ -1,0 +1,9 @@
+syntax = "proto3";
+package com.ffaero.openrocketassembler.model.proto;
+
+import "OpenRocketVersion.proto";
+
+message Cache {
+    repeated OpenRocketVersion openRocketVersions = 1;
+    uint64 openRocketVersionsLastUpdate = 2;
+}

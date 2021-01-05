@@ -22,7 +22,9 @@ application {
 }
 
 dependencies {
+    implementation "com.google.code.gson:gson:2.8.6"
     implementation "com.google.protobuf:protobuf-java:3.13.0"
+    implementation "net.harawata:appdirs:1.2.0"
 }
 
 jar {

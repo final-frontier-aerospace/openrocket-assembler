@@ -1,0 +1,8 @@
+syntax = "proto3";
+package com.ffaero.openrocketassembler.model.proto;
+
+message OpenRocketVersion {
+    string name = 1;
+    string filename = 2;
+    string downloadURL = 3;
+}
