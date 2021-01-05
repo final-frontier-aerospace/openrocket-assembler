@@ -100,6 +100,11 @@ class ProjectController(public val app: ApplicationController, private val model
 	}
 	
 	init {
-		reset()
+		val file = file
+		if (file != null) {
+			load(file)
+		} else {
+			reset()
+		}
 	}
 }
