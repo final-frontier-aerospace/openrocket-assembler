@@ -9,13 +9,17 @@ import java.io.IOException
 import org.apache.commons.io.IOUtils
 import java.io.File
 
-class OpenRocketDownloader(private val proj: ProjectController) : IAction {
+class OpenRocketDownloader : ActionBase<ProjectController>() {
 	private val projectListener = object : ProjectAdapter() {
-		override fun onOpenRocketVersionChange(sender: ProjectController, version: String) {
-			val ver = proj.app.openrocket.lookupVersion(version)
-			if (ver != null) {
-				val file = FileSystem.getCacheFile(ver.getFilename())
-				if (!file.exists()) {
+		override fun onOpenRocketVersionChange(sender: ProjectController, version: String) = enqueueAction(sender, 0)
+	}
+	
+	override fun runAction(controller: ProjectController) {
+		val ver = controller.app.openrocket.lookupVersion(controller.openRocketVersion)
+		if (ver != null) {
+			val file = FileSystem.getCacheFile(ver.getFilename())
+			if (!file.exists()) {
+				ActionReport(controller.app, "Downloading " + ver.getName() + "...").use {
 					val tmpFile = File(file.getParentFile(), "~" + file.getName())
 					try {
 						URL(ver.getDownloadURL()).openStream().use { i ->
@@ -31,12 +35,12 @@ class OpenRocketDownloader(private val proj: ProjectController) : IAction {
 			}
 		}
 	}
-	
-	override fun stop() {
-		proj.removeListener(projectListener)
+
+	override fun addListeners(controller: ProjectController) {
+		controller.addListener(projectListener)
 	}
-	
-	init {
-		proj.addListener(projectListener)
+
+	override fun removeListeners(controller: ProjectController) {
+		controller.removeListener(projectListener)
 	}
 }

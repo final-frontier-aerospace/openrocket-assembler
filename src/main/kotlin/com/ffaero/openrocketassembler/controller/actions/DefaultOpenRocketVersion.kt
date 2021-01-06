@@ -5,28 +5,30 @@ import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.controller.ProjectAdapter
 import com.ffaero.openrocketassembler.controller.OpenRocketAdapter
 
-class DefaultOpenRocketVersion(private val proj: ProjectController) : IAction {
-	private fun fixVersion(version: String, versions: List<String>) {
-		if ((version.isEmpty() || !versions.contains(version)) && !versions.isEmpty()) {
-			proj.openRocketVersion = versions.first()
-		}
-	}
-	
+class DefaultOpenRocketVersion : ActionBase<ProjectController>() {
 	private val openRocketListener = object : OpenRocketAdapter() {
-		override fun onOpenRocketVersionsUpdated(sender: OpenRocketController, versions: List<String>) = fixVersion(proj.openRocketVersion, versions)
+		override fun onOpenRocketVersionsUpdated(sender: OpenRocketController, versions: List<String>) = enqueueActionAll(0)
 	}
 	
 	private val projectListener = object : ProjectAdapter() {
-		override fun onOpenRocketVersionChange(sender: ProjectController, version: String) = fixVersion(version, proj.app.openrocket.versions)
+		override fun onOpenRocketVersionChange(sender: ProjectController, version: String) = enqueueAction(sender, 0)
 	}
 	
-	override fun stop() {
-		proj.app.openrocket.removeListener(openRocketListener)
-		proj.removeListener(projectListener)
+	override fun runAction(controller: ProjectController) {
+		val version = controller.openRocketVersion
+		val versions = controller.app.openrocket.versions
+		if ((version.isEmpty() || !versions.contains(version)) && !versions.isEmpty()) {
+			controller.openRocketVersion = versions.first()
+		}
 	}
-	
-	init {
-		proj.app.openrocket.addListener(openRocketListener)
-		proj.addListener(projectListener)
+
+	override fun addListeners(controller: ProjectController) {
+		controller.app.openrocket.addListener(openRocketListener)
+		controller.addListener(projectListener)
+	}
+
+	override fun removeListeners(controller: ProjectController) {
+		controller.app.openrocket.removeListener(openRocketListener)
+		controller.removeListener(projectListener)
 	}
 }

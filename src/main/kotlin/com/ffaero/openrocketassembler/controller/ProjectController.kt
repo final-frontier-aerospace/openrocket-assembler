@@ -6,8 +6,8 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.controller.actions.DefaultOpenRocketVersion
-import com.ffaero.openrocketassembler.controller.actions.IAction
 import com.ffaero.openrocketassembler.controller.actions.OpenRocketDownloader
+import com.ffaero.openrocketassembler.controller.actions.ActionRunner
 
 class ProjectController(public val app: ApplicationController, private val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
 	private var stopped = false
@@ -28,7 +28,7 @@ class ProjectController(public val app: ApplicationController, private val model
 				if (!value) {
 					throw IllegalArgumentException("Cannot set modified to false, instead save the file")
 				}
-				if (!modified_) {
+				if (!modified_ && !ActionRunner.isRunner.get()) {
 					modified_ = true
 					listener.onStatus(this, true)
 				}
@@ -53,10 +53,9 @@ class ProjectController(public val app: ApplicationController, private val model
 				}
 			}
 	
-	private val actions = arrayOf(
-		DefaultOpenRocketVersion(this),
-		OpenRocketDownloader(this)
-	)
+	init {
+		app.actions.addListeners(app.actions.projectActions, this)
+	}
 	
 	public fun stop() {
 		if (stopped) {
@@ -65,9 +64,7 @@ class ProjectController(public val app: ApplicationController, private val model
 		stopped = true
 		listener.onStop(this)
 		app.removeProject(this)
-		actions.forEach {
-			it.stop()
-		}
+		app.actions.removeListeners(app.actions.projectActions, this)
 	}
 	
 	private fun markUnmodified() {

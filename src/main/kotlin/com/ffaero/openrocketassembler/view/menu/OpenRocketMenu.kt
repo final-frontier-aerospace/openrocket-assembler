@@ -1,7 +1,6 @@
 package com.ffaero.openrocketassembler.view.menu
 
 import com.ffaero.openrocketassembler.controller.ProjectController
-import com.ffaero.openrocketassembler.view.RedirectedEventQueue
 import java.awt.event.ActionListener
 import java.io.IOException
 import javax.swing.JMenu
@@ -62,13 +61,7 @@ class OpenRocketMenu(private val parent: Component, private val proj: ProjectCon
 	private val updateMenu = JMenuItem("Check for Updates").apply {
 		addActionListener(object : ActionListener {
 			override fun actionPerformed(e: ActionEvent?) {
-				try {
-					RedirectedEventQueue().use {
-						proj.app.openrocket.checkForUpdates()
-					}
-				} catch (ex: IOException) {
-					JOptionPane.showMessageDialog(parent, "Error while checking for OpenRocket updates:\n" + ex.message, "Check for Updates", JOptionPane.ERROR_MESSAGE)
-				}
+				proj.app.openrocket.checkForUpdates()
 			}
 		})
 		this@OpenRocketMenu.add(this)

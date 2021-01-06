@@ -17,6 +17,7 @@ import javax.swing.JFileChooser
 import com.ffaero.openrocketassembler.FileFormat
 import javax.swing.filechooser.FileNameExtensionFilter
 import java.io.IOException
+import javax.swing.SpringLayout
 
 class ApplicationView(internal val view: ViewManager, private val proj: ProjectController) {
 	private val frame = JFrame().apply {
@@ -35,6 +36,15 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 			
 			override fun windowClosing(e: WindowEvent?) = close()
 		})
+		getContentPane().apply {
+			val layout = SpringLayout()
+			setLayout(layout)
+			
+			val statusBar = StatusBar(proj.app)
+			add(statusBar)
+			layout.putConstraint(SpringLayout.EAST, statusBar, 0, SpringLayout.EAST, this)
+			layout.putConstraint(SpringLayout.SOUTH, statusBar, 0, SpringLayout.SOUTH, this)
+		}
 	}
 	
 	internal val fileChooser = JFileChooser().apply {

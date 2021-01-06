@@ -4,6 +4,7 @@ import com.ffaero.openrocketassembler.FileSystem
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.FileInputStream
+import com.ffaero.openrocketassembler.controller.actions.ActionFactory
 import com.ffaero.openrocketassembler.model.proto.CacheOuterClass.Cache
 import java.io.File
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
@@ -20,11 +21,27 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 			}
 		}
 	}
-	internal val periodicRunner = PeriodicRunner()
+	internal val actions = ActionFactory()
+	
+	private var backgroundStatus_ = ""
+	public var backgroundStatus: String
+		get() = backgroundStatus_
+		set(value) {
+			backgroundStatus_ = value
+			listener.onBackgroundStatus(this, value)
+		}
 	
 	public val openrocket = OpenRocketController(this)
 	
-	public fun stop() = periodicRunner.stop()
+	init {
+		actions.addListeners(actions.applicationActions, this)
+	}
+	
+	public fun stop() {
+		actions.removeListeners(actions.applicationActions, this)
+		actions.stop()
+	}
+	
 	public fun addProject(model: Project.Builder, file: File?) = listener.onProjectAdded(this, ProjectController(this, model, file))
 	internal fun removeProject(proj: ProjectController) = listener.onProjectRemoved(this, proj)
 	
