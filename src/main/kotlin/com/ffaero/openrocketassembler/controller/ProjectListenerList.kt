@@ -7,4 +7,5 @@ class ProjectListenerList : ListenerListBase<ProjectListener>(), ProjectListener
 	override fun onStatus(sender: ProjectController, modified: Boolean) = forEach { it.onStatus(sender, modified) }
 	override fun onFileChange(sender: ProjectController, file: File?) = forEach { it.onFileChange(sender, file) }
 	override fun onOpenRocketVersionChange(sender: ProjectController, version: String) = forEach { it.onOpenRocketVersionChange(sender, version) }
+	override fun onComponentTemplateChange(sender: ProjectController) = forEach { it.onComponentTemplateChange(sender) }
 }

@@ -5,11 +5,13 @@ import com.ffaero.openrocketassembler.controller.DispatcherBase
 class ActionFactory {
 	private val runner = ActionRunner()
 	
+	public val defaultComponentTemplate = DefaultComponentTemplate()
 	public val defaultOpenRocketVersion = DefaultOpenRocketVersion()
 	public val openRocketDownloader = OpenRocketDownloader()
 	public val openRocketUpdateCheck = OpenRocketUpdateCheck()
 	
 	public val projectActions = mk(
+		defaultComponentTemplate,
 		defaultOpenRocketVersion,
 		openRocketDownloader
 	)

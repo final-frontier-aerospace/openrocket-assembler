@@ -8,4 +8,5 @@ message Project {
     string openRocketVersion = 2;
     uint32 nextID = 3;
     repeated Component components = 4;
+    bytes componentTemplate = 5;
 }

@@ -96,20 +96,24 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 	}
 	
 	public fun closeThen(title: String, action: String, func: Runnable) {
+		if (proj.editingComponentTemplate) {
+			if (JOptionPane.showConfirmDialog(frame, "Template is still open in OpenRocket.\nAll changes to it will be lost if you continue " + action + ".\nContinue?", title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+				return
+			}
+		}
 		if (proj.modified) {
 			when (JOptionPane.showConfirmDialog(frame, "Project has unsaved changes.\nSave before " + action + "?", title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
 				JOptionPane.YES_OPTION -> {
-					if (saveProject(proj.file, title)) {
-						func.run()
+					if (!saveProject(proj.file, title)) {
+						return
 					}
 				}
-				JOptionPane.NO_OPTION -> {
-					func.run()
+				else -> {
+					return
 				}
 			}
-		} else {
-			func.run()
 		}
+		func.run()
 	}
 	
 	public fun close() {

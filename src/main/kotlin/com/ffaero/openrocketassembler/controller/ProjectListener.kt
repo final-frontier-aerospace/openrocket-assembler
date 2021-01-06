@@ -7,4 +7,5 @@ interface ProjectListener {
 	fun onStatus(sender: ProjectController, modified: Boolean)
 	fun onFileChange(sender: ProjectController, file: File?)
 	fun onOpenRocketVersionChange(sender: ProjectController, version: String)
+	fun onComponentTemplateChange(sender: ProjectController)
 }

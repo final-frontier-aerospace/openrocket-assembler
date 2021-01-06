@@ -9,8 +9,8 @@ object FileSystem {
 	private const val version = "1.0"
 	private val appDirs = AppDirsFactory.getInstance()
 	private val cacheDir = File(appDirs.getUserCacheDir(application, version, publisher)).apply { mkdirs() }
+	private val tempDir = File(File(appDirs.getUserDataDir(application, version, publisher)), "Temp").apply { mkdirs() }
 	
-	public fun getCacheFile(name: String): File {
-		return File(cacheDir, name)
-	}
+	public fun getCacheFile(name: String) = File(cacheDir, name)
+	public fun getTempFile(owner: Any, name: String) = File(tempDir, String.format("%08X-%s", owner.hashCode(), name))
 }

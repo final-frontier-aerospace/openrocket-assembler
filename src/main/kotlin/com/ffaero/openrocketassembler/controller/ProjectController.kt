@@ -8,6 +8,8 @@ import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.controller.actions.DefaultOpenRocketVersion
 import com.ffaero.openrocketassembler.controller.actions.OpenRocketDownloader
 import com.ffaero.openrocketassembler.controller.actions.ActionRunner
+import com.google.protobuf.ByteString
+import com.ffaero.openrocketassembler.FileSystem
 
 class ProjectController(public val app: ApplicationController, internal val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
 	private var stopped = false
@@ -55,6 +57,16 @@ class ProjectController(public val app: ApplicationController, internal val mode
 				}
 			}
 	
+	public var componentTemplate: ByteString
+			get() = model.getComponentTemplate()
+			set(value) {
+				if (!model.getComponentTemplate().equals(value)) {
+					model.setComponentTemplate(value)
+					listener.onComponentTemplateChange(this)
+					modified = true
+				}
+			}
+	
 	init {
 		app.actions.addListeners(app.actions.projectActions, this)
 	}
@@ -76,6 +88,7 @@ class ProjectController(public val app: ApplicationController, internal val mode
 	
 	private fun afterLoad(file: File?) {
 		listener.onOpenRocketVersionChange(this, openRocketVersion)
+		listener.onComponentTemplateChange(this)
 		components.afterLoad(file)
 		markUnmodified()
 	}
@@ -107,6 +120,28 @@ class ProjectController(public val app: ApplicationController, internal val mode
 		val id = model.getNextID()
 		model.setNextID(id + 1)
 		return id
+	}
+	
+	private var editingComponentTemplate_ = false
+	public val editingComponentTemplate
+			get() = editingComponentTemplate_
+	
+	public fun editComponentTemplate() {
+		if (editingComponentTemplate_) {
+			return
+		}
+		editingComponentTemplate_ = true
+		val file = FileSystem.getTempFile(this, "template.ork")
+		FileOutputStream(file).use {
+			componentTemplate.writeTo(it)
+		}
+		app.openrocket.launch(openRocketVersion, file.getAbsolutePath()) {
+			FileInputStream(file).use {
+				componentTemplate = ByteString.readFrom(it)
+			}
+			file.delete()
+			editingComponentTemplate_ = false
+		}
 	}
 	
 	init {

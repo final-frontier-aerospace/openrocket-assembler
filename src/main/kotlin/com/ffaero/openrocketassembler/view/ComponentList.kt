@@ -100,6 +100,33 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 		return parent
 	}
 	
+	private val contextHoverer = object : PopupMenuListener {
+		private fun item(e: PopupMenuEvent?): ComponentListView? {
+			if (e == null) {
+				return null
+			}
+			val src = e.getSource()
+			if (!(src is JPopupMenu)) {
+				return null
+			}
+			val item = src.getInvoker()
+			if (!(item is ComponentListView)) {
+				return null
+			}
+			return item
+		}
+		
+		override fun popupMenuCanceled(e: PopupMenuEvent?) = Unit
+		
+		override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
+			item(e)?.hoverEnd()
+		}
+		
+		override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
+			item(e)?.hoverStart()
+		}
+	}
+	
 	private val contextMenu = JPopupMenu().apply {
 		add(JMenuItem("Edit").apply {
 			addActionListener(object : ActionListener {
@@ -142,32 +169,7 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 				}
 			})
 		})
-		addPopupMenuListener(object : PopupMenuListener {
-			private fun item(e: PopupMenuEvent?): ComponentListView? {
-				if (e == null) {
-					return null
-				}
-				val src = e.getSource()
-				if (!(src is JPopupMenu)) {
-					return null
-				}
-				val item = src.getInvoker()
-				if (!(item is ComponentListView)) {
-					return null
-				}
-				return item
-			}
-			
-			override fun popupMenuCanceled(e: PopupMenuEvent?) = Unit
-			
-			override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
-				item(e)?.hoverEnd()
-			}
-			
-			override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
-				item(e)?.hoverStart()
-			}
-		})
+		addPopupMenuListener(contextHoverer)
 	}
 	
 	override fun create(): ComponentListItem = ComponentListItem().apply {
@@ -198,9 +200,63 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 	}
 	
 	init {
+		prefix = arrayOf(
+			ComponentListView(true).apply {
+				text = "template.ork"
+				val ctx = JPopupMenu().apply {
+					add(JMenuItem("Edit").apply {
+						addActionListener(object : ActionListener {
+							override fun actionPerformed(e: ActionEvent?) {
+								if (comp.proj.editingComponentTemplate) {
+									JOptionPane.showMessageDialog(this@ComponentList, "Template is already open in OpenRocket", "Edit", JOptionPane.ERROR_MESSAGE)
+								} else {
+									comp.proj.editComponentTemplate()
+								}
+							}
+						})
+					})
+					addPopupMenuListener(contextHoverer)
+				}
+				addMouseListener(object : MouseAdapter() {
+					override fun mouseReleased(e: MouseEvent?) {
+						if (e == null) {
+							return
+						}
+						if (e.isPopupTrigger()) {
+							ctx.show(e.getComponent(), e.getX(), e.getY())
+						}
+					}
+				})
+			}
+		)
 		suffix = arrayOf(
 			ComponentListView(true).apply {
 				text = "Create new component..."
+				addMouseListener(object : MouseAdapter() {
+					override fun mouseClicked(e: MouseEvent?) {
+						if (e == null) {
+							return
+						}
+						if (e.getButton() == MouseEvent.BUTTON1 && fileChooser.showSaveDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
+							var file = fileChooser.getSelectedFile()
+							if (file != null) {
+								if (!file.getName().contains('.')) {
+									file = File(file.getPath() + ".ork")
+								}
+								if (comp.components.any { file.getAbsolutePath().equals(it.getAbsolutePath()) }) {
+									JOptionPane.showMessageDialog(this@ComponentList, "File is already in project:\n" + file.getPath(), "Import", JOptionPane.ERROR_MESSAGE)
+									return
+								}
+								if (file.exists()) {
+									if (JOptionPane.showConfirmDialog(this@ComponentList, "File already exists.  Overwrite?", "Create", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+										return
+									}
+								}
+								comp.create(file)
+							}
+						}
+					}
+				})
 			},
 			ComponentListView(true).apply {
 				text = "Import existing component..."
