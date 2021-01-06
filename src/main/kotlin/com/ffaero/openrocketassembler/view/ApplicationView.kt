@@ -108,6 +108,8 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 						return
 					}
 				}
+				JOptionPane.NO_OPTION -> {
+				}
 				else -> {
 					return
 				}

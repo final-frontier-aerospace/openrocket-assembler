@@ -16,6 +16,7 @@ class ProjectController(public val app: ApplicationController, internal val mode
 	private var modified_ = false
 	
 	public val components = ComponentController(this)
+	public val configurations = ConfigurationController(this)
 	
 	public var file: File?
 			get() = file_
@@ -90,6 +91,7 @@ class ProjectController(public val app: ApplicationController, internal val mode
 		listener.onOpenRocketVersionChange(this, openRocketVersion)
 		listener.onComponentTemplateChange(this)
 		components.afterLoad(file)
+		configurations.afterLoad()
 		markUnmodified()
 	}
 	

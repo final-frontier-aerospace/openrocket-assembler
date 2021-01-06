@@ -38,9 +38,8 @@ class EditorPanel(view: ApplicationView, private val proj: ProjectController) : 
 		setLeftComponent(this)
 	}
 	
-	private val rightContent = JTabbedPane()
-	
-	private val right = JScrollPane(rightContent, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER).apply {
+	private val right = ConfigurationTabView(proj).apply {
+		setMinimumSize(Dimension(200, 200))
 		setRightComponent(this)
 	}
 	

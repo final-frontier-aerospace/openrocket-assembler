@@ -1,0 +1,6 @@
+syntax = "proto3";
+package com.ffaero.openrocketassembler.model.proto;
+
+message Configuration {
+    string name = 1;
+}

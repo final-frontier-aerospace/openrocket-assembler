@@ -2,6 +2,7 @@ syntax = "proto3";
 package com.ffaero.openrocketassembler.model.proto;
 
 import "Component.proto";
+import "Configuration.proto";
 
 message Project {
     uint32 version = 1;
@@ -9,4 +10,5 @@ message Project {
     uint32 nextID = 3;
     repeated Component components = 4;
     bytes componentTemplate = 5;
+    repeated Configuration configurations = 6;
 }
