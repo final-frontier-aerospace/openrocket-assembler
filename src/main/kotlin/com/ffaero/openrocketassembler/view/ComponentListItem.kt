@@ -7,8 +7,6 @@ import java.io.File
 class ComponentListItem : ListViewItem() {
 	private val view = ComponentListView(false)
 	
-	public var index: Int = 0
-	
 	private var file_: File? = null
 	public var file: File?
 		get() = file_

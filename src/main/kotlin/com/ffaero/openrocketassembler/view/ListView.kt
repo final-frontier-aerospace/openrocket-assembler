@@ -5,7 +5,7 @@ import java.awt.Component
 
 abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	protected abstract fun create(): TItem
-	protected abstract fun set(item: TItem, i: Int, v: TValue)
+	protected abstract fun set(item: TItem, v: TValue)
 	protected abstract fun addListeners()
 	protected abstract fun removeListeners()
 	
@@ -46,7 +46,8 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 		items.clear()
 		vals.forEach {
 			items.add(create().apply {
-				set(this, items.size, it)
+				index = items.size
+				set(this, it)
 				this@ListView.add(this)
 			})
 		}
@@ -55,27 +56,44 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	
 	protected fun doAdd(index: Int, v: TValue) {
 		items.add(index, create().apply {
-			set(this, index, v)
+			this.index = index
+			set(this, v)
 			this@ListView.add(this)
 		})
+		items.subList(index + 1, items.size).forEach {
+			++it.index
+		}
 		revalidate()
 	}
 	
 	protected fun doRemove(index: Int) {
 		remove(items.get(index))
 		items.removeAt(index)
+		items.subList(index, items.size).forEach {
+			--it.index
+		}
 		revalidate()
 	}
 	
 	protected fun doMove(fromIndex: Int, toIndex: Int) {
 		val tmp = items.get(fromIndex)
 		items.removeAt(fromIndex)
+		tmp.index = toIndex
 		items.add(toIndex, tmp)
+		if (fromIndex < toIndex) {
+			items.subList(fromIndex, toIndex).forEach {
+				--it.index
+			}
+		} else if (fromIndex > toIndex) {
+			items.subList(toIndex + 1, fromIndex + 1).forEach {
+				++it.index
+			}
+		}
 		revalidate()
 	}
 	
 	protected fun doChange(index: Int, v: TValue) {
-		set(items.get(index), index, v)
+		set(items.get(index), v)
 	}
 	
 	init {

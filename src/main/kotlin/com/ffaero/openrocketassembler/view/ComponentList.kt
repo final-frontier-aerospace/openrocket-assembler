@@ -169,6 +169,27 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 				}
 			})
 		})
+		addSeparator()
+		add(JMenuItem("Move Up").apply {
+			addActionListener(object : ActionListener {
+				override fun actionPerformed(e: ActionEvent?) {
+					var item = getItem(e)
+					if (item != null && item.index > 0) {
+						comp.move(item.index, item.index - 1)
+					}
+				}
+			})
+		})
+		add(JMenuItem("Move Down").apply {
+			addActionListener(object : ActionListener {
+				override fun actionPerformed(e: ActionEvent?) {
+					var item = getItem(e)
+					if (item != null && item.index < comp.components.size - 1) {
+						comp.move(item.index, item.index + 1)
+					}
+				}
+			})
+		})
 		addPopupMenuListener(contextHoverer)
 	}
 	
@@ -185,8 +206,7 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 		})
 	}
 
-	override fun set(item: ComponentListItem, i: Int, v: File) {
-		item.index = i
+	override fun set(item: ComponentListItem, v: File) {
 		item.file = v
 	}
 
