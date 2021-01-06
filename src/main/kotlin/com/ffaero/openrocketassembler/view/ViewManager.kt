@@ -19,6 +19,7 @@ class ViewManager(app: ApplicationController) {
 				views.remove(project)
 				if (views.isEmpty()) {
 					app.stop()
+					app.removeListener(this)
 				}
 			}
 		})

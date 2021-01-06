@@ -135,7 +135,11 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 			setState(JFrame.NORMAL)
 		}
 		proj.addListener(object : ProjectAdapter() {
-			override fun onStop(sender: ProjectController) = frame.dispose()
+			override fun onStop(sender: ProjectController) {
+				frame.dispose()
+				proj.removeListener(this)
+			}
+			
 			override fun onStatus(sender: ProjectController, modified: Boolean) = updateTitle(modified, proj.file)
 			override fun onFileChange(sender: ProjectController, file: File?) = updateTitle(proj.modified, file)
 		}.apply {
