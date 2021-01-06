@@ -44,6 +44,13 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 			add(statusBar)
 			layout.putConstraint(SpringLayout.EAST, statusBar, 0, SpringLayout.EAST, this)
 			layout.putConstraint(SpringLayout.SOUTH, statusBar, 0, SpringLayout.SOUTH, this)
+			
+			val editor = EditorPanel(this@ApplicationView, proj)
+			add(editor)
+			layout.putConstraint(SpringLayout.NORTH, editor, 0, SpringLayout.NORTH, this)
+			layout.putConstraint(SpringLayout.EAST, editor, 0, SpringLayout.EAST, this)
+			layout.putConstraint(SpringLayout.SOUTH, editor, 0, SpringLayout.SOUTH, this)
+			layout.putConstraint(SpringLayout.WEST, editor, 0, SpringLayout.WEST, this)
 		}
 	}
 	

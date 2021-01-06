@@ -1,7 +1,11 @@
 syntax = "proto3";
 package com.ffaero.openrocketassembler.model.proto;
 
+import "Component.proto";
+
 message Project {
     uint32 version = 1;
     string openRocketVersion = 2;
+    uint32 nextID = 3;
+    repeated Component components = 4;
 }

@@ -6,4 +6,5 @@ import "OpenRocketVersion.proto";
 message Cache {
     repeated OpenRocketVersion openRocketVersions = 1;
     uint64 openRocketVersionsLastUpdate = 2;
+    float windowSplit = 3;
 }

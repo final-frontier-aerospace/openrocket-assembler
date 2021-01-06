@@ -22,14 +22,25 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 		}
 	}
 	internal val actions = ActionFactory()
+	private var writeCacheOnExit = false
 	
 	private var backgroundStatus_ = ""
 	public var backgroundStatus: String
-		get() = backgroundStatus_
-		set(value) {
-			backgroundStatus_ = value
-			listener.onBackgroundStatus(this, value)
-		}
+			get() = backgroundStatus_
+			set(value) {
+				backgroundStatus_ = value
+				listener.onBackgroundStatus(this, value)
+			}
+	
+	public var windowSplit: Float
+			get() = cache.getWindowSplit()
+			set(value) {
+				if (value != cache.getWindowSplit()) {
+					cache.setWindowSplit(value)
+					writeCacheOnExit = true
+					listener.onWindowSplitChanged(this, value)
+				}
+			}
 	
 	public val openrocket = OpenRocketController(this)
 	
@@ -40,6 +51,9 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 	public fun stop() {
 		actions.removeListeners(actions.applicationActions, this)
 		actions.stop()
+		if (writeCacheOnExit) {
+			writeCache()
+		}
 	}
 	
 	public fun addProject(model: Project.Builder, file: File?) = listener.onProjectAdded(this, ProjectController(this, model, file))
@@ -49,6 +63,7 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 		try {
 			FileOutputStream(cacheFile).use {
 				cache.build().writeTo(it)
+				writeCacheOnExit = false
 			}
 		} catch (ex: IOException) {
 		}

@@ -9,9 +9,11 @@ import com.ffaero.openrocketassembler.controller.actions.DefaultOpenRocketVersio
 import com.ffaero.openrocketassembler.controller.actions.OpenRocketDownloader
 import com.ffaero.openrocketassembler.controller.actions.ActionRunner
 
-class ProjectController(public val app: ApplicationController, private val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
+class ProjectController(public val app: ApplicationController, internal val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
 	private var stopped = false
 	private var modified_ = false
+	
+	public val components = ComponentController(this)
 	
 	public var file: File?
 			get() = file_
@@ -72,15 +74,16 @@ class ProjectController(public val app: ApplicationController, private val model
 		listener.onStatus(this, false)
 	}
 	
-	private fun afterLoad() {
+	private fun afterLoad(file: File?) {
 		listener.onOpenRocketVersionChange(this, openRocketVersion)
+		components.afterLoad(file)
 		markUnmodified()
 	}
 	
 	public fun reset() {
 		file = null
 		model.clear()
-		afterLoad()
+		afterLoad(null)
 	}
 	
 	public fun load(file: File) {
@@ -88,14 +91,22 @@ class ProjectController(public val app: ApplicationController, private val model
 			model.clear()
 			model.mergeFrom(it)
 		}
-		afterLoad()
+		afterLoad(file)
 	}
 	
 	public fun save(file: File) {
 		FileOutputStream(file).use {
-			model.setVersion(FileFormat.version).build().writeTo(it)
+			model.setVersion(FileFormat.version)
+			components.beforeSave(file, model)
+			model.build().writeTo(it)
 		}
 		markUnmodified()
+	}
+	
+	public fun makeID(): Int {
+		val id = model.getNextID()
+		model.setNextID(id + 1)
+		return id
 	}
 	
 	init {

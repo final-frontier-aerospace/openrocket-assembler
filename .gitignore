@@ -271,4 +271,5 @@ $RECYCLE.BIN/
 .classpath
 .project
 
+*.ork
 *.orka

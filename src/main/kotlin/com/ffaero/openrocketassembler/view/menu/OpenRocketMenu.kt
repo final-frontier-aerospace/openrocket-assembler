@@ -52,8 +52,6 @@ class OpenRocketMenu(private val parent: Component, private val proj: ProjectCon
 					})
 				}
 			}
-		}.apply {
-			onOpenRocketVersionsUpdated(proj.app.openrocket, proj.app.openrocket.versions)
 		}
 		projectListener = object : ProjectAdapter() {
 			override fun onOpenRocketVersionChange(sender: ProjectController, version: String) {
@@ -61,8 +59,6 @@ class OpenRocketMenu(private val parent: Component, private val proj: ProjectCon
 					it.setSelected(it.getActionCommand().equals(version))
 				}
 			}
-		}.apply {
-			onOpenRocketVersionChange(proj, proj.openRocketVersion)
 		}
 		this@OpenRocketMenu.add(this)
 	}
@@ -79,7 +75,9 @@ class OpenRocketMenu(private val parent: Component, private val proj: ProjectCon
 	init {
 		addHierarchyListener(object : ListenerLifecycleManager() {
 			override fun addListeners() {
+				openRocketListener.onOpenRocketVersionsUpdated(proj.app.openrocket, proj.app.openrocket.versions)
 				proj.app.openrocket.addListener(openRocketListener)
+				projectListener.onOpenRocketVersionChange(proj, proj.openRocketVersion)
 				proj.addListener(projectListener)
 			}
 
