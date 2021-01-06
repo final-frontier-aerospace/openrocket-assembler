@@ -7,6 +7,7 @@ import java.io.FileOutputStream
 import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.controller.actions.DefaultOpenRocketVersion
 import com.ffaero.openrocketassembler.controller.actions.IAction
+import com.ffaero.openrocketassembler.controller.actions.OpenRocketDownloader
 
 class ProjectController(public val app: ApplicationController, private val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
 	private var stopped = false
@@ -53,7 +54,8 @@ class ProjectController(public val app: ApplicationController, private val model
 			}
 	
 	private val actions = arrayOf(
-		DefaultOpenRocketVersion(this)
+		DefaultOpenRocketVersion(this),
+		OpenRocketDownloader(this)
 	)
 	
 	public fun stop() {

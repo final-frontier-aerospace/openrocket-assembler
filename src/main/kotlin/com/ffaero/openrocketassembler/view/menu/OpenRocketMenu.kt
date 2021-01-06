@@ -15,6 +15,14 @@ import com.ffaero.openrocketassembler.controller.ProjectAdapter
 import javax.swing.JRadioButtonMenuItem
 
 class OpenRocketMenu(private val parent: Component, private val proj: ProjectController) : JMenu("OpenRocket") {
+	private val launchMenu = JMenuItem("Launch").apply {
+		addActionListener(object : ActionListener {
+			override fun actionPerformed(e: ActionEvent?) = proj.app.openrocket.launch(proj.openRocketVersion)
+		})
+		this@OpenRocketMenu.add(this)
+		this@OpenRocketMenu.addSeparator()
+	}
+	
 	private val setMenu = JMenu("Set OpenRocket Version").apply {
 		val list = ArrayList<JRadioButtonMenuItem>()
 		val setListener = object : ActionListener {

@@ -8,8 +8,9 @@ object FileSystem {
 	private const val application = "openrocketassembler"
 	private const val version = "1.0"
 	private val appDirs = AppDirsFactory.getInstance()
+	private val cacheDir = File(appDirs.getUserCacheDir(application, version, publisher)).apply { mkdirs() }
 	
 	public fun getCacheFile(name: String): File {
-		return File(File(appDirs.getUserCacheDir(application, version, publisher)), name)
+		return File(cacheDir, name)
 	}
 }

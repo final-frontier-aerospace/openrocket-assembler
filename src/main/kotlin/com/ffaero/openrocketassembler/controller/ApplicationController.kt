@@ -30,7 +30,6 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 	
 	public fun writeCache() {
 		try {
-			cacheFile.getParentFile().mkdirs()
 			FileOutputStream(cacheFile).use {
 				cache.build().writeTo(it)
 			}

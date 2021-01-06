@@ -11,8 +11,25 @@ import com.ffaero.openrocketassembler.model.GitHubReleaseAsset
 import java.util.Comparator
 import com.ffaero.openrocketassembler.model.proto.OpenRocketVersionOuterClass.OpenRocketVersion
 import java.lang.Runnable
+import java.io.File
+import com.ffaero.openrocketassembler.FileSystem
 
 class OpenRocketController(private val app: ApplicationController) : DispatcherBase<OpenRocketListener, OpenRocketListenerList>(OpenRocketListenerList()) {
+	private val java: String
+	
+	init {
+		val bin = File(File(System.getProperty("java.home")), "bin")
+		var exe = File(bin, "javaw")
+		if (exe.exists()) {
+			exe = File(bin, "javaw.exe")
+		}
+		if (exe.exists()) {
+			java = bin.getAbsolutePath()
+		} else {
+			java = "javaw"
+		}
+	}
+	
 	private val task = PeriodicTask(object: Runnable {
 		override fun run() = checkForUpdates()
 	}, app.cache.getOpenRocketVersionsLastUpdate(), 1000 * 60 * 60 * 24 * 7).apply {
@@ -75,6 +92,25 @@ class OpenRocketController(private val app: ApplicationController) : DispatcherB
 			app.cache.setOpenRocketVersionsLastUpdate(task.lastRun)
 			app.writeCache()
 			listener.onOpenRocketVersionsUpdated(this, versions)
+		}
+	}
+	
+	internal fun lookupVersion(version: String): OpenRocketVersion? = app.cache.getOpenRocketVersionsList().find { it.getName().equals(version) }
+	
+	public fun launch(version: String, vararg args: String, death: Runnable? = null) {
+		val ver = lookupVersion(version)
+		if (ver == null) {
+			death?.run()
+			return
+		}
+		val proc = Runtime.getRuntime().exec(arrayOf(java, "-jar", FileSystem.getCacheFile(ver.getFilename()).getAbsolutePath()).plus(args))
+		if (death != null) {
+			Thread(object : Runnable {
+				override fun run() {
+					proc.waitFor()
+					death.run()
+				}
+			}).start()
 		}
 	}
 }
