@@ -75,26 +75,18 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 		}
 		val src = e.getSource()
 		if (!(src is JMenuItem)) {
-			System.out.println("Not JMenuItem")
-			System.out.println(src)
 			return null
 		}
 		val ctx = src.getParent()
 		if (!(ctx is JPopupMenu)) {
-			System.out.println("Not JPopupMenu")
-			System.out.println(ctx)
 			return null
 		}
 		val inv = ctx.getInvoker()
 		if (!(inv is ComponentListView)) {
-			System.out.println("Not ComponentListView")
-			System.out.println(inv)
 			return null
 		}
 		val parent = inv.getParent()
 		if (!(parent is ComponentListItem)) {
-			System.out.println("Not ComponentListItem")
-			System.out.println(parent)
 			return null
 		}
 		return parent

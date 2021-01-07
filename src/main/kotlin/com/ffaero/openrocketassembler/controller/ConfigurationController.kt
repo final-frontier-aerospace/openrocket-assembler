@@ -12,6 +12,12 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 		listener.onConfigurationAdded(this, proj.model.getConfigurationsCount() - 1, name)
 	}
 	
+	public fun duplicate(dupIndex: Int, newName: String) {
+		proj.model.addConfigurations(dupIndex + 1, proj.model.getConfigurations(dupIndex).toBuilder().setName(newName).build())
+		proj.modified = true
+		listener.onConfigurationAdded(this, dupIndex + 1, newName)
+	}
+	
 	public fun remove(index: Int) {
 		proj.model.removeConfigurations(index)
 		proj.modified = true
