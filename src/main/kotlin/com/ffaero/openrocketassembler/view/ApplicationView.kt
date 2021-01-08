@@ -23,7 +23,6 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 	private val frame = JFrame().apply {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE)
-		extendedState = JFrame.MAXIMIZED_BOTH
 		preferredSize = Dimension(1024, 768)
 		size = preferredSize
 		addWindowListener(object : WindowListener {

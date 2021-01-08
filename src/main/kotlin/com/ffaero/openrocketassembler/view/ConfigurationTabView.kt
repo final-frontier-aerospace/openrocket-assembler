@@ -168,16 +168,6 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 				})
 			})
 			addSeparator()
-			add(JMenuItem("Select").apply {
-				addActionListener(object : ActionListener {
-					override fun actionPerformed(e: ActionEvent?) {
-						val tab = getTab(e)
-						if (tab != null) {
-							setSelectedIndex(indexOfTabComponent(tab))
-						}
-					}
-				})
-			})
 			add(JMenuItem("Move Left").apply {
 				addActionListener(object : ActionListener {
 					override fun actionPerformed(e: ActionEvent?) {
@@ -204,6 +194,16 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 					}
 				})
 			})
+		}
+		
+		override fun mouseClicked(e: MouseEvent?) {
+			if (e == null) {
+				return
+			}
+			val src = e.getComponent()
+			if (e.getButton() == MouseEvent.BUTTON1 && src is ConfigurationTabLabel) {
+				setSelectedIndex(indexOfTabComponent(src))
+			}
 		}
 		
 		override fun mouseReleased(e: MouseEvent?) {
