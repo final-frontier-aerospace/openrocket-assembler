@@ -1,0 +1,6 @@
+syntax = "proto3";
+package com.ffaero.openrocketassembler.model.proto;
+
+message Bug8188 {
+    uint32 value = 1;
+}

@@ -16,7 +16,7 @@ import java.awt.event.ActionListener
 import java.awt.event.ActionEvent
 import java.awt.EventQueue
 
-class ComponentList(private val view: ApplicationView, private val comp: ComponentController) : ListView<ComponentListItem, File>() {
+class ComponentList(private val view: EditorPanel, private val comp: ComponentController) : ListView<ComponentListItem, File>() {
 	private val compListener = object : ComponentAdapter() {
 		override fun onComponentsReset(sender: ComponentController, components: List<File>) {
 			doReset(components)
@@ -29,7 +29,7 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 						while (!fixed) {
 							when (JOptionPane.showOptionDialog(this@ComponentList, message, "Open", JOptionPane.DEFAULT_OPTION, type, null, arrayOf("Close Project", "Ignore", "Browse for File"), null)) {
 								0 -> { // Close project
-									view.closeThen("Open", "closing project") {
+									view.app.closeThen("Open", "closing project") {
 										comp.proj.reset()
 										fixed = true
 									}
@@ -123,7 +123,7 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 		add(JMenuItem("Edit").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
-					var item = getItem(e)
+					val item = getItem(e)
 					if (item != null) {
 						comp.proj.app.openrocket.launch(comp.proj.openRocketVersion, item.file!!.getAbsolutePath())
 					}
@@ -133,7 +133,7 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 		add(JMenuItem("Relocate").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
-					var item = getItem(e)
+					val item = getItem(e)
 					if (item != null) {
 						if (JOptionPane.showConfirmDialog(this@ComponentList, "Are you sure you want to relocate this component?\nThis involves selecting a different file to replace all instances of this component in the project with.", "Relocate", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
 							if (fileChooser.showOpenDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
@@ -154,7 +154,7 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 		add(JMenuItem("Remove").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
-					var item = getItem(e)
+					val item = getItem(e)
 					if (item != null) {
 						comp.remove(item.index)
 					}
@@ -162,10 +162,23 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 			})
 		})
 		addSeparator()
+		add(JMenuItem("Append to Rocket").apply {
+			addActionListener(object : ActionListener {
+				override fun actionPerformed(e: ActionEvent?) {
+					val item = getItem(e)
+					if (item != null) {
+						val file = item.file
+						if (file != null) {
+							view.configView.addComponentToCurrent(file)
+						}
+					}
+				}
+			})
+		})
 		add(JMenuItem("Move Up").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
-					var item = getItem(e)
+					val item = getItem(e)
 					if (item != null && item.index > 0) {
 						comp.move(item.index, item.index - 1)
 					}
@@ -175,7 +188,7 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 		add(JMenuItem("Move Down").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
-					var item = getItem(e)
+					val item = getItem(e)
 					if (item != null && item.index < comp.components.size - 1) {
 						comp.move(item.index, item.index + 1)
 					}
@@ -202,16 +215,17 @@ class ComponentList(private val view: ApplicationView, private val comp: Compone
 		item.file = v
 	}
 
-	override fun addListeners() {
-		compListener.onComponentsReset(comp, comp.components)
-		comp.addListener(compListener)
-	}
-
-	override fun removeListeners() {
-		comp.removeListener(compListener)
-	}
-	
 	init {
+		addHierarchyListener(object : ListenerLifecycleManager() {
+			override fun addListeners() {
+				compListener.onComponentsReset(comp, comp.components)
+				comp.addListener(compListener)
+			}
+			
+			override fun removeListeners() {
+				comp.removeListener(compListener)
+			}
+		})
 		prefix = arrayOf(
 			ComponentListView(true).apply {
 				text = "template.ork"

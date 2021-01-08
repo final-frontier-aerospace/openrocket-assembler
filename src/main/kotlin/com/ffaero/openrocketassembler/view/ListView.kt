@@ -6,8 +6,6 @@ import java.awt.Component
 abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	protected abstract fun create(): TItem
 	protected abstract fun set(item: TItem, v: TValue)
-	protected abstract fun addListeners()
-	protected abstract fun removeListeners()
 	
 	private var prefix_: Array<Component> = arrayOf()
 	public var prefix: Array<Component>
@@ -98,9 +96,5 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	
 	init {
 		setLayout(ListViewLayoutManager(this))
-		addHierarchyListener(object : ListenerLifecycleManager() {
-			override fun addListeners() = this@ListView.addListeners()
-			override fun removeListeners() = this@ListView.removeListeners()
-		})
 	}
 }

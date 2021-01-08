@@ -15,7 +15,7 @@ import java.awt.EventQueue
 import javax.swing.JScrollPane
 import com.ffaero.openrocketassembler.controller.ProjectController
 
-class EditorPanel(view: ApplicationView, private val proj: ProjectController) : JSplitPane(JSplitPane.HORIZONTAL_SPLIT) {
+class EditorPanel(public val app: ApplicationView, private val proj: ProjectController) : JSplitPane(JSplitPane.HORIZONTAL_SPLIT) {
 	companion object {
 		private const val maxRoundingErrorPx = 10
 	}
@@ -31,14 +31,12 @@ class EditorPanel(view: ApplicationView, private val proj: ProjectController) : 
 	
 	private fun setSplit(split: Float) = setDividerLocation(targetDividerLocPx(split))
 	
-	private val leftContent = ComponentList(view, proj.components)
-	
-	private val left = JScrollPane(leftContent, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER).apply {
+	private val left = JScrollPane(ComponentList(this, proj.components), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER).apply {
 		setMinimumSize(Dimension(200, 200))
 		setLeftComponent(this)
 	}
 	
-	private val right = ConfigurationTabView(proj).apply {
+	internal val configView = ConfigurationTabView(proj).apply {
 		setMinimumSize(Dimension(200, 200))
 		setRightComponent(this)
 	}

@@ -1,6 +1,9 @@
 syntax = "proto3";
 package com.ffaero.openrocketassembler.model.proto;
 
+import "Bug8188.proto";
+
 message Configuration {
     string name = 1;
+    repeated Bug8188 components = 2;
 }

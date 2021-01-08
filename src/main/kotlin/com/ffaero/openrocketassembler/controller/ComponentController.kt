@@ -4,22 +4,27 @@ import java.io.File
 import com.ffaero.openrocketassembler.model.proto.ComponentOuterClass.Component
 import java.nio.file.Paths
 import java.nio.file.Path
-import com.ffaero.openrocketassembler.model.AbsoluteComponent
 import java.util.LinkedList
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import java.io.FileOutputStream
+import com.ffaero.openrocketassembler.model.ComponentFile
+import java.util.Collections
 
 class ComponentController(public val proj: ProjectController) : DispatcherBase<ComponentListener, ComponentListenerList>(ComponentListenerList()) {
-	private val data = LinkedList<AbsoluteComponent>()
+	private val data = LinkedList<ComponentFile>()
+	private val lookup = HashMap<Int, ComponentFile>()
 	
 	public val components: List<File>
-			get() = data.map { it.file }
+			get() = Collections.unmodifiableList(data)
+	
+	internal fun findComponent(id: Int): ComponentFile? = lookup.get(id)
 	
 	public fun add(file: File) {
-		val abs = file.getAbsoluteFile()
-		data.add(AbsoluteComponent(proj.makeID(), abs))
+		val comp = ComponentFile(proj.makeID(), file)
+		data.add(comp)
+		lookup.put(comp.id, comp)
 		proj.modified = true
-		listener.onComponentAdded(this, data.size - 1, abs)
+		listener.onComponentAdded(this, data.size - 1, comp)
 	}
 	
 	public fun create(file: File) {
@@ -30,7 +35,7 @@ class ComponentController(public val proj: ProjectController) : DispatcherBase<C
 	}
 	
 	public fun remove(index: Int) {
-		data.removeAt(index)
+		lookup.remove(data.removeAt(index).id)
 		proj.modified = true
 		listener.onComponentRemoved(this, index)
 	}
@@ -44,17 +49,23 @@ class ComponentController(public val proj: ProjectController) : DispatcherBase<C
 	}
 	
 	public fun change(index: Int, file: File) {
-		val abs = file.getAbsoluteFile()
-		data.get(index).file = abs
+		val comp = ComponentFile(data.get(index).id, file)
+		data.set(index, comp)
 		proj.modified = true
-		listener.onComponentChanged(this, index, abs)
+		proj.configurations.componentFileUpdate(comp)
+		listener.onComponentChanged(this, index, comp)
 	}
 	
 	internal fun afterLoad(file: File?) {
 		data.clear()
+		lookup.clear()
 		if (file != null) {
 			val base = file.getParentFile()
-			data.addAll(proj.model.getComponentsList().map { AbsoluteComponent(it.getId(), File(base, it.getFilename()).getAbsoluteFile()) })
+			proj.model.getComponentsList().map {
+				val comp = ComponentFile(it.getId(), File(base, it.getFilename()))
+				data.add(comp)
+				lookup.put(comp.id, comp)
+			}
 		}
 		listener.onComponentsReset(this, components)
 	}
@@ -63,7 +74,7 @@ class ComponentController(public val proj: ProjectController) : DispatcherBase<C
 		val base = Paths.get(file.getParentFile().getAbsolutePath())
 		model.clearComponents()
 		data.forEach {
-			model.addComponents(Component.newBuilder().setId(it.id).setFilename(base.relativize(Paths.get(it.file.getPath())).toString()).build())
+			model.addComponents(Component.newBuilder().setId(it.id).setFilename(base.relativize(Paths.get(it.getPath())).toString()).build())
 		}
 	}
 }

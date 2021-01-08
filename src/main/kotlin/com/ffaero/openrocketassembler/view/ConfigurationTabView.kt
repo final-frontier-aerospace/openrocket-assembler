@@ -16,6 +16,9 @@ import javax.swing.JPopupMenu
 import javax.swing.JMenuItem
 import java.awt.event.ActionListener
 import java.awt.event.ActionEvent
+import java.io.File
+import javax.swing.event.PopupMenuListener
+import javax.swing.event.PopupMenuEvent
 
 class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane() {
 	private var updating = false
@@ -25,18 +28,29 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 			while (getTabCount() > 1) {
 				removeTabAt(0)
 			}
-			var idx = 0
 			updating = true
-			names.forEach {
-				ConfigurationTabLabel(this@ConfigurationTabView, it).insert(this@ConfigurationTabView, idx++)
+			names.forEachIndexed { idx, it ->
+				ConfigurationTabLabel(this@ConfigurationTabView, it).apply {
+					val view = view
+					if (view is RocketList) {
+						view.onReset(sender.componentsAt(idx))
+					}
+					insert(this@ConfigurationTabView, idx)
+				}
 			}
 			setSelectedIndex(0)
 			updating = false
 		}
 
-		override fun onConfigurationAdded(sender: ConfigurationController, index: Int, name: String) {
+		override fun onConfigurationAdded(sender: ConfigurationController, index: Int, name: String, components: List<File>) {
 			updating = true
-			ConfigurationTabLabel(this@ConfigurationTabView, name).insert(this@ConfigurationTabView, index)
+			ConfigurationTabLabel(this@ConfigurationTabView, name).apply {
+				val view = view
+				if (view is RocketList) {
+					view.onReset(components)
+				}
+				insert(this@ConfigurationTabView, index)
+			}
 			setSelectedIndex(index)
 			updating = false
 		}
@@ -53,8 +67,9 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 			if (!(comp is ConfigurationTabLabelBase)) {
 				return
 			}
-			onConfigurationRemoved(sender, fromIndex)
-			onConfigurationAdded(sender, toIndex, comp.text)
+			removeTabAt(fromIndex)
+			comp.insert(this@ConfigurationTabView, toIndex)
+			setSelectedIndex(toIndex)
 			updating = false
 		}
 
@@ -64,6 +79,37 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 				return
 			}
 			comp.text = name
+		}
+		override fun onComponentAdded(sender: ConfigurationController, configIndex: Int, index: Int, component: File) {
+			val comp = getComponentAt(configIndex)
+			if (!(comp is RocketList)) {
+				return
+			}
+			comp.onAdd(index, component)
+		}
+
+		override fun onComponentRemoved(sender: ConfigurationController, configIndex: Int, index: Int) {
+			val comp = getComponentAt(configIndex)
+			if (!(comp is RocketList)) {
+				return
+			}
+			comp.onRemove(index)
+		}
+
+		override fun onComponentMoved(sender: ConfigurationController, configIndex: Int, fromIndex: Int, toIndex: Int) {
+			val comp = getComponentAt(configIndex)
+			if (!(comp is RocketList)) {
+				return
+			}
+			comp.onMove(fromIndex, toIndex)
+		}
+
+		override fun onComponentChanged(sender: ConfigurationController, configIndex: Int, index: Int, component: File) {
+			val comp = getComponentAt(configIndex)
+			if (!(comp is RocketList)) {
+				return
+			}
+			comp.onChange(index, component)
 		}
 	}
 	
@@ -112,6 +158,16 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 				})
 			})
 			addSeparator()
+			add(JMenuItem("Select").apply {
+				addActionListener(object : ActionListener {
+					override fun actionPerformed(e: ActionEvent?) {
+						val tab = getTab(e)
+						if (tab != null) {
+							setSelectedIndex(indexOfTabComponent(tab))
+						}
+					}
+				})
+			})
 			add(JMenuItem("Move Left").apply {
 				addActionListener(object : ActionListener {
 					override fun actionPerformed(e: ActionEvent?) {
@@ -150,10 +206,115 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 		}
 	}
 	
+	private fun getItem(e: ActionEvent?): RocketListItem? {
+		if (e == null) {
+			return null
+		}
+		val src = e.getSource()
+		if (!(src is JMenuItem)) {
+			return null
+		}
+		val ctx = src.getParent()
+		if (!(ctx is JPopupMenu)) {
+			return null
+		}
+		val inv = ctx.getInvoker()
+		if (!(inv is RocketListItem)) {
+			return null
+		}
+		return inv
+	}
+	
+	internal val componentMouseListener = object : MouseAdapter() {
+		private val contextMenu = JPopupMenu().apply {
+			add(JMenuItem("Delete").apply {
+				addActionListener(object : ActionListener {
+					override fun actionPerformed(e: ActionEvent?) {
+						val src = getItem(e)
+						if (src == null) {
+							return
+						}
+						proj.configurations.removeComponent(indexOfComponent(src.list), src.index)
+					}
+				})
+			})
+			addSeparator()
+			add(JMenuItem("Move Up").apply {
+				addActionListener(object : ActionListener {
+					override fun actionPerformed(e: ActionEvent?) {
+						val src = getItem(e)
+						if (src == null) {
+							return
+						}
+						if (src.index > 0) {
+							proj.configurations.moveComponent(indexOfComponent(src.list), src.index, src.index - 1)
+						}
+					}
+				})
+			})
+			add(JMenuItem("Move Down").apply {
+				addActionListener(object : ActionListener {
+					override fun actionPerformed(e: ActionEvent?) {
+						val src = getItem(e)
+						if (src == null) {
+							return
+						}
+						val idx = indexOfComponent(src.list)
+						if (src.index < proj.configurations.componentsAt(idx).size - 1) {
+							proj.configurations.moveComponent(idx, src.index, src.index + 1)
+						}
+					}
+				})
+			})
+			addPopupMenuListener(object : PopupMenuListener {
+				private fun item(e: PopupMenuEvent?): RocketListItem? {
+					if (e == null) {
+						return null
+					}
+					val src = e.getSource()
+					if (!(src is JPopupMenu)) {
+						return null
+					}
+					val item = src.getInvoker()
+					if (!(item is RocketListItem)) {
+						return null
+					}
+					return item
+				}
+				
+				override fun popupMenuCanceled(e: PopupMenuEvent?) = Unit
+
+				override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
+					item(e)?.hoverEnd()
+				}
+
+				override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
+					item(e)?.hoverStart()
+				}
+			})
+		}
+	
+		override fun mouseReleased(e: MouseEvent?) {
+			if (e == null) {
+				return
+			}
+			if (e.isPopupTrigger()) {
+				contextMenu.show(e.getComponent(), e.getX(), e.getY())
+			}
+		}
+	}
+	
 	public fun addConfig() {
 		val str = JOptionPane.showInputDialog(this@ConfigurationTabView, "Please enter a name for the new configuration:", "Create", JOptionPane.QUESTION_MESSAGE)
 		if (str != null && !str.isEmpty()) {
 			proj.configurations.add(str)
+		}
+	}
+	
+	public fun addComponentToCurrent(component: File) {
+		val idx = getSelectedIndex()
+		if (idx < getTabCount() - 1) {
+			proj.configurations.addComponent(idx, proj.configurations.componentsAt(idx).size, component)
 		}
 	}
 	
