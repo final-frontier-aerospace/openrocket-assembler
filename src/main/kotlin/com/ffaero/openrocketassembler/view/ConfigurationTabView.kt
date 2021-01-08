@@ -134,6 +134,16 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 	
 	internal val tabMouseListener = object : MouseAdapter() {
 		private val contextMenu = JPopupMenu().apply {
+			add(JMenuItem("Edit").apply {
+				addActionListener(object : ActionListener {
+					override fun actionPerformed(e: ActionEvent?) {
+						val tab = getTab(e)
+						if (tab != null) {
+							proj.configurations.edit(indexOfTabComponent(tab))
+						}
+					}
+				})
+			})
 			add(JMenuItem("Duplicate").apply {
 				addActionListener(object : ActionListener {
 					override fun actionPerformed(e: ActionEvent?) {

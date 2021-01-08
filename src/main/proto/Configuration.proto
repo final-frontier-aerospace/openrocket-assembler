@@ -6,4 +6,5 @@ import "Bug8188.proto";
 message Configuration {
     string name = 1;
     repeated Bug8188 components = 2;
+    bytes fileOutline = 3;
 }

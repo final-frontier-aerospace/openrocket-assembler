@@ -35,8 +35,10 @@ class ComponentController(public val proj: ProjectController) : DispatcherBase<C
 	}
 	
 	public fun remove(index: Int) {
-		lookup.remove(data.removeAt(index).id)
+		val comp = data.removeAt(index)
+		lookup.remove(comp.id)
 		proj.modified = true
+		proj.configurations.componentFileDeleted(comp)
 		listener.onComponentRemoved(this, index)
 	}
 	

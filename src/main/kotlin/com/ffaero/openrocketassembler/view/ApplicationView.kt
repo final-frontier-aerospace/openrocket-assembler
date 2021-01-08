@@ -101,6 +101,11 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 				return
 			}
 		}
+		if (proj.configurations.isEditingAny()) {
+			if (JOptionPane.showConfirmDialog(frame, "At least one configuration is still open in OpenRocket.\nAll changes to simulations and other data will be lost if you continue " + action + ".\nContinue?", title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+				return
+			}
+		}
 		if (proj.modified) {
 			when (JOptionPane.showConfirmDialog(frame, "Project has unsaved changes.\nSave before " + action + "?", title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
 				JOptionPane.YES_OPTION -> {

@@ -5,6 +5,12 @@ import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.Config
 import java.io.File
 import com.ffaero.openrocketassembler.model.ComponentFile
 import com.ffaero.openrocketassembler.model.proto.Bug8188OuterClass.Bug8188
+import com.google.protobuf.ByteString
+import com.ffaero.openrocketassembler.FileSystem
+import java.io.FileOutputStream
+import java.io.ByteArrayInputStream
+import org.apache.commons.io.IOUtils
+import java.io.FileInputStream
 
 class ConfigurationController(public val proj: ProjectController) : DispatcherBase<ConfigurationListener, ConfigurationListenerList>(ConfigurationListenerList()) {
 	public val names: List<String>
@@ -13,9 +19,18 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 	private fun componentsIn(model: ConfigurationOrBuilder): List<ComponentFile> = model.getComponentsList().map { proj.components.findComponent(it.getValue()) }.filterNotNull()
 	public fun componentsAt(index: Int): List<File> = componentsIn(proj.model.getConfigurations(index))
 	
+	public fun getFileOutlineAt(index: Int) = proj.model.getConfigurations(index).getFileOutline()
+	public fun setFileOutlineAt(index: Int, file: ByteString) {
+		proj.model.getConfigurationsBuilder(index).setFileOutline(file)
+		proj.modified = true
+	}
+	
+	private val editing = ArrayList<Boolean>()
+	
 	public fun add(name: String) {
 		proj.model.addConfigurations(Configuration.newBuilder().setName(name).build())
 		proj.modified = true
+		editing.add(false)
 		listener.onConfigurationAdded(this, proj.model.getConfigurationsCount() - 1, name, listOf())
 	}
 	
@@ -23,12 +38,14 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 		val model = proj.model.getConfigurations(dupIndex).toBuilder().setName(newName).build()
 		proj.model.addConfigurations(dupIndex + 1, model)
 		proj.modified = true
+		editing.add(dupIndex + 1, false)
 		listener.onConfigurationAdded(this, dupIndex + 1, newName, componentsIn(model))
 	}
 	
 	public fun remove(index: Int) {
 		proj.model.removeConfigurations(index)
 		proj.modified = true
+		editing.removeAt(index)
 		listener.onConfigurationRemoved(this, index)
 	}
 	
@@ -37,6 +54,9 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 		proj.model.removeConfigurations(fromIndex)
 		proj.model.addConfigurations(toIndex, tmp)
 		proj.modified = true
+		val tmpB = editing.get(fromIndex)
+		editing.removeAt(fromIndex)
+		editing.add(toIndex, tmpB)
 		listener.onConfigurationMoved(this, fromIndex, toIndex)
 	}
 	
@@ -70,6 +90,10 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 	}
 	
 	internal fun afterLoad() {
+		editing.clear()
+		names.forEach {
+			editing.add(false)
+		}
 		listener.onConfigurationsReset(this, names)
 	}
 	
@@ -80,6 +104,100 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 					listener.onComponentChanged(this, idx, idx2, file)
 				}
 			}
+		}
+	}
+	
+	internal fun componentFileDeleted(file: ComponentFile) {
+		val list = ArrayList<Pair<Int, Int>>()
+		proj.model.getConfigurationsList().forEachIndexed { idx, it ->
+			it.getComponentsList().forEachIndexed { idx2, it2 ->
+				if (it2.getValue() == file.id) {
+					list.add(Pair(idx, idx2))
+				}
+			}
+		}
+		list.forEach {
+			System.out.println("removeComponent")
+			removeComponent(it.first, it.second)
+		}
+	}
+	
+	public fun isEditingAny() = editing.any { it }
+	public fun isEditing(configIndex: Int) = editing.get(configIndex)
+	
+	public fun edit(configIndex: Int) {
+		if (isEditing(configIndex)) {
+			return
+		}
+		editing.set(configIndex, true)
+		val model = proj.model.getConfigurationsBuilder(configIndex)
+		val file = FileSystem.getTempFile(model, model.getName() + ".ork")
+		OpenRocketOutputStream(FileOutputStream(file)).use { out ->
+			OpenRocketInputStream(model.getFileOutline().newInput()).use { outlineIn ->
+				while (true) {
+					val outlineEnt = outlineIn.getNextEntry()
+					if (outlineEnt == null) {
+						break
+					}
+					if (outlineEnt.isRocketXML) {
+						val doc = OpenRocketXML(UncloseableInputStream(outlineIn))
+						componentsIn(model).forEach {
+							OpenRocketInputStream(FileInputStream(it)).use { compIn ->
+								while (true) {
+									val compEnt = compIn.getNextEntry()
+									if (compEnt == null) {
+										break
+									}
+									if (compEnt.isRocketXML) {
+										doc.addSubcomponents(OpenRocketXML(UncloseableInputStream(compIn)).getSubcomponents())
+									} else {
+										out.putNextEntry(compEnt)
+										IOUtils.copy(UncloseableInputStream(compIn), UncloseableOutputStream(out))
+										out.closeEntry()
+									}
+									compIn.closeEntry()
+								}
+							}
+						}
+						out.putNextEntry(OpenRocketEntry.rocketXMLEntry)
+						doc.write(UncloseableOutputStream(out))
+						out.closeEntry()
+					} else {
+						out.putNextEntry(outlineEnt)
+						IOUtils.copy(UncloseableInputStream(outlineIn), UncloseableOutputStream(out))
+						out.closeEntry()
+					}
+					outlineIn.closeEntry()
+				}
+			}
+		}
+		proj.app.openrocket.launch(proj.openRocketVersion, file.getAbsolutePath()) {
+			val bs = ByteString.newOutput()
+			OpenRocketOutputStream(bs).use { out ->
+				OpenRocketInputStream(FileInputStream(file)).use { input ->
+					while (true) {
+						val ent = input.getNextEntry()
+						if (ent == null) {
+							break
+						}
+						if (ent.isRocketXML) {
+							val doc = OpenRocketXML(UncloseableInputStream(input))
+							doc.clearSubcomponents()
+							out.putNextEntry(OpenRocketEntry.rocketXMLEntry)
+							doc.write(UncloseableOutputStream(out))
+							out.closeEntry()
+						} else {
+							out.putNextEntry(ent)
+							IOUtils.copy(UncloseableInputStream(input), UncloseableOutputStream(out))
+							out.closeEntry()
+						}
+						input.closeEntry()
+					}
+				}
+			}
+			file.delete()
+			setFileOutlineAt(configIndex, bs.toByteString())
+			editing.set(configIndex, false)
 		}
 	}
 }
