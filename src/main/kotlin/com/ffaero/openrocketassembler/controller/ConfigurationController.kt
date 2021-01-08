@@ -11,6 +11,7 @@ import java.io.FileOutputStream
 import java.io.ByteArrayInputStream
 import org.apache.commons.io.IOUtils
 import java.io.FileInputStream
+import com.ffaero.openrocketassembler.FileFormat
 
 class ConfigurationController(public val proj: ProjectController) : DispatcherBase<ConfigurationListener, ConfigurationListenerList>(ConfigurationListenerList()) {
 	public val names: List<String>
@@ -19,10 +20,20 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 	private fun componentsIn(model: ConfigurationOrBuilder): List<ComponentFile> = model.getComponentsList().map { proj.components.findComponent(it.getValue()) }.filterNotNull()
 	public fun componentsAt(index: Int): List<File> = componentsIn(proj.model.getConfigurations(index))
 	
-	public fun getFileOutlineAt(index: Int) = proj.model.getConfigurations(index).getFileOutline()
+	public fun getFileOutlineAt(index: Int): ByteString {
+		val file = proj.model.getConfigurations(index).getFileOutline()
+		if (file.isEmpty()) {
+			return FileFormat.emptyORK
+		} else {
+			return file
+		}
+	}
+	
 	public fun setFileOutlineAt(index: Int, file: ByteString) {
-		proj.model.getConfigurationsBuilder(index).setFileOutline(file)
-		proj.modified = true
+		if (!getFileOutlineAt(index).equals(file)) {
+			proj.model.getConfigurationsBuilder(index).setFileOutline(file)
+			proj.modified = true
+		}
 	}
 	
 	private val editing = ArrayList<Boolean>()

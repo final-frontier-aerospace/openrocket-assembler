@@ -59,11 +59,17 @@ class ProjectController(public val app: ApplicationController, internal val mode
 			}
 	
 	public var componentTemplate: ByteString
-			get() = model.getComponentTemplate()
+			get() {
+				val temp = model.getComponentTemplate()
+				if (temp.isEmpty()) {
+					return FileFormat.emptyORK
+				} else {
+					return temp
+				}
+			}
 			set(value) {
 				if (!model.getComponentTemplate().equals(value)) {
 					model.setComponentTemplate(value)
-					listener.onComponentTemplateChange(this)
 					modified = true
 				}
 			}
@@ -89,7 +95,6 @@ class ProjectController(public val app: ApplicationController, internal val mode
 	
 	private fun afterLoad(file: File?) {
 		listener.onOpenRocketVersionChange(this, openRocketVersion)
-		listener.onComponentTemplateChange(this)
 		components.afterLoad(file)
 		configurations.afterLoad()
 		markUnmodified()
