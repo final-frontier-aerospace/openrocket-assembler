@@ -1,19 +1,16 @@
 package com.ffaero.openrocketassembler.view
 
-import javax.swing.JSplitPane
-import java.awt.Dimension
-import java.awt.event.ComponentEvent
-import javax.swing.JTabbedPane
-import com.ffaero.openrocketassembler.controller.ApplicationController
-import javax.swing.JPanel
-import java.awt.Color
-import java.awt.event.ComponentAdapter
-import java.beans.PropertyChangeListener
-import java.beans.PropertyChangeEvent
 import com.ffaero.openrocketassembler.controller.ApplicationAdapter
-import java.awt.EventQueue
-import javax.swing.JScrollPane
+import com.ffaero.openrocketassembler.controller.ApplicationController
 import com.ffaero.openrocketassembler.controller.ProjectController
+import java.awt.Dimension
+import java.awt.event.ComponentAdapter
+import java.awt.event.ComponentEvent
+import java.awt.EventQueue
+import java.beans.PropertyChangeEvent
+import java.beans.PropertyChangeListener
+import javax.swing.JScrollPane
+import javax.swing.JSplitPane
 
 class EditorPanel(public val app: ApplicationView, private val proj: ProjectController) : JSplitPane(JSplitPane.HORIZONTAL_SPLIT) {
 	companion object {

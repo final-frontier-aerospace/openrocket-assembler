@@ -1,16 +1,14 @@
 package com.ffaero.openrocketassembler.view.menu
 
-import com.ffaero.openrocketassembler.view.ViewManager
-import com.ffaero.openrocketassembler.controller.ApplicationController
-import java.awt.event.ActionListener
-import javax.swing.JMenu
-import javax.swing.KeyStroke
-import java.awt.event.ActionEvent
-import javax.swing.JMenuItem
-import java.awt.event.KeyEvent
-import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import com.ffaero.openrocketassembler.controller.ProjectController
+import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import com.ffaero.openrocketassembler.view.ApplicationView
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.awt.event.KeyEvent
+import javax.swing.JMenu
+import javax.swing.JMenuItem
+import javax.swing.KeyStroke
 
 class WindowMenu(private val view: ApplicationView, private val proj: ProjectController) : JMenu("Window") {
 	private val newMenu = JMenuItem("New").apply {

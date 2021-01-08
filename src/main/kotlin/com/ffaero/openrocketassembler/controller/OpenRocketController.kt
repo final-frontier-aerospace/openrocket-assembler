@@ -1,18 +1,9 @@
 package com.ffaero.openrocketassembler.controller
 
-import com.google.gson.stream.JsonReader
-import java.net.URL
-import java.io.Reader
-import java.io.InputStreamReader
-import com.google.gson.Gson
-import com.ffaero.openrocketassembler.model.GitHubRelease
-import java.util.LinkedList
-import com.ffaero.openrocketassembler.model.GitHubReleaseAsset
-import java.util.Comparator
-import com.ffaero.openrocketassembler.model.proto.OpenRocketVersionOuterClass.OpenRocketVersion
-import java.lang.Runnable
-import java.io.File
 import com.ffaero.openrocketassembler.FileSystem
+import com.ffaero.openrocketassembler.model.proto.OpenRocketVersionOuterClass.OpenRocketVersion
+import java.io.File
+import java.lang.Runnable
 
 class OpenRocketController(private val app: ApplicationController) : DispatcherBase<OpenRocketListener, OpenRocketListenerList>(OpenRocketListenerList()) {
 	private val java: String

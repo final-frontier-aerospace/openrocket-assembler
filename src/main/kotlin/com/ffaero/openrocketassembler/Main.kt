@@ -1,13 +1,11 @@
 package com.ffaero.openrocketassembler
 
-import com.ffaero.openrocketassembler.view.ViewManager
 import com.ffaero.openrocketassembler.controller.ApplicationController
-import java.io.IOException
-import java.io.File
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
-import java.io.FilenameFilter
-import javax.swing.filechooser.FileNameExtensionFilter
+import com.ffaero.openrocketassembler.view.ViewManager
+import java.io.File
 import java.io.FileFilter
+import java.io.IOException
 
 fun main(args: Array<String>) {
 	val controller = ApplicationController()

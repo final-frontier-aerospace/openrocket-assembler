@@ -1,7 +1,7 @@
 package com.ffaero.openrocketassembler.view
 
-import javax.swing.JPanel
 import java.awt.Component
+import javax.swing.JPanel
 
 abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	protected abstract fun create(): TItem

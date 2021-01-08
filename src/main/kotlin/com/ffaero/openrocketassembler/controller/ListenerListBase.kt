@@ -1,7 +1,7 @@
 package com.ffaero.openrocketassembler.controller
 
-import java.util.function.Consumer
 import java.util.concurrent.locks.ReentrantLock
+import java.util.function.Consumer
 
 abstract class ListenerListBase<TListener> {
 	private class TrackingSet<TListener>(copy: HashSet<TListener>) : HashSet<TListener>(copy) {

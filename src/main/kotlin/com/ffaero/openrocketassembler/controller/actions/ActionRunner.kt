@@ -1,8 +1,8 @@
 package com.ffaero.openrocketassembler.controller.actions
 
+import com.ffaero.openrocketassembler.controller.DispatcherBase
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.TimeUnit
-import com.ffaero.openrocketassembler.controller.DispatcherBase
 
 class ActionRunner {
 	companion object {

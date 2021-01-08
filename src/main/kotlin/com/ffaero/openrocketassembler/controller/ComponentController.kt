@@ -1,14 +1,13 @@
 package com.ffaero.openrocketassembler.controller
 
-import java.io.File
-import com.ffaero.openrocketassembler.model.proto.ComponentOuterClass.Component
-import java.nio.file.Paths
-import java.nio.file.Path
-import java.util.LinkedList
-import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
-import java.io.FileOutputStream
 import com.ffaero.openrocketassembler.model.ComponentFile
+import com.ffaero.openrocketassembler.model.proto.ComponentOuterClass.Component
+import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.file.Paths
 import java.util.Collections
+import java.util.LinkedList
 
 class ComponentController(public val proj: ProjectController) : DispatcherBase<ComponentListener, ComponentListenerList>(ComponentListenerList()) {
 	private val data = LinkedList<ComponentFile>()

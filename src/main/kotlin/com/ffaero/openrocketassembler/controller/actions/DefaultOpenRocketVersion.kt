@@ -1,9 +1,9 @@
 package com.ffaero.openrocketassembler.controller.actions
 
-import com.ffaero.openrocketassembler.controller.OpenRocketController
-import com.ffaero.openrocketassembler.controller.ProjectController
-import com.ffaero.openrocketassembler.controller.ProjectAdapter
 import com.ffaero.openrocketassembler.controller.OpenRocketAdapter
+import com.ffaero.openrocketassembler.controller.OpenRocketController
+import com.ffaero.openrocketassembler.controller.ProjectAdapter
+import com.ffaero.openrocketassembler.controller.ProjectController
 
 class DefaultOpenRocketVersion : ActionBase<ProjectController>() {
 	private val openRocketListener = object : OpenRocketAdapter() {

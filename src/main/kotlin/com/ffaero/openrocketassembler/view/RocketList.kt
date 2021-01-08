@@ -1,8 +1,7 @@
 package com.ffaero.openrocketassembler.view
 
-import javax.swing.JScrollPane
-import com.ffaero.openrocketassembler.controller.ProjectController
 import java.io.File
+import javax.swing.JScrollPane
 
 class RocketList(private val view: ConfigurationTabView) : JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER) {
 	private val list = object : ListView<RocketListItem, File>() {

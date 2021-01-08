@@ -1,14 +1,14 @@
 package com.ffaero.openrocketassembler.controller.actions
 
 import com.ffaero.openrocketassembler.controller.ApplicationController
-import com.google.gson.Gson
 import com.ffaero.openrocketassembler.model.GitHubRelease
 import com.ffaero.openrocketassembler.model.GitHubReleaseAsset
-import java.util.LinkedList
+import com.ffaero.openrocketassembler.model.proto.OpenRocketVersionOuterClass.OpenRocketVersion
+import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import java.io.InputStreamReader
 import java.net.URL
-import com.ffaero.openrocketassembler.model.proto.OpenRocketVersionOuterClass.OpenRocketVersion
+import java.util.LinkedList
 
 class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 	companion object {

@@ -1,14 +1,14 @@
 package com.ffaero.openrocketassembler.view
 
-import java.awt.Font
-import javax.swing.JLabel
+import com.ffaero.openrocketassembler.model.TemplateFile
 import java.awt.BorderLayout
-import java.awt.event.MouseListener
-import java.io.File
-import javax.swing.BorderFactory
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import com.ffaero.openrocketassembler.model.TemplateFile
+import java.awt.event.MouseListener
+import java.awt.Font
+import java.io.File
+import javax.swing.BorderFactory
+import javax.swing.JLabel
 
 class ComponentListItem : ListViewItem() {
 	private val label = JLabel()

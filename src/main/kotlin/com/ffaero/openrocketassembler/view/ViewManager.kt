@@ -1,8 +1,8 @@
 package com.ffaero.openrocketassembler.view
 
-import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.controller.ApplicationAdapter
 import com.ffaero.openrocketassembler.controller.ApplicationController
+import com.ffaero.openrocketassembler.controller.ProjectController
 
 class ViewManager(app: ApplicationController) {
 	private val views = HashMap<ProjectController, ApplicationView>()

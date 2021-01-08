@@ -1,13 +1,13 @@
 package com.ffaero.openrocketassembler.controller.actions
 
-import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.controller.ProjectAdapter
+import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.FileSystem
-import java.net.URL
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.net.URL
 import org.apache.commons.io.IOUtils
-import java.io.File
 
 class OpenRocketDownloader : ActionBase<ProjectController>() {
 	private val projectListener = object : ProjectAdapter() {

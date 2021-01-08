@@ -1,24 +1,20 @@
 package com.ffaero.openrocketassembler.view.menu
 
-import com.ffaero.openrocketassembler.view.ViewManager
 import com.ffaero.openrocketassembler.controller.ProjectController
-import java.awt.event.ActionListener
-import javax.swing.JMenu
-import javax.swing.KeyStroke
-import java.awt.event.ActionEvent
-import javax.swing.JFileChooser
-import javax.swing.JMenuItem
-import java.awt.Component
-import java.awt.event.KeyEvent
-import javax.swing.filechooser.FileFilter
-import javax.swing.filechooser.FileNameExtensionFilter
-import java.io.FileNotFoundException
-import java.io.IOException
-import javax.swing.JOptionPane
-import com.google.protobuf.InvalidProtocolBufferException
-import java.io.File
 import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.view.ApplicationView
+import com.google.protobuf.InvalidProtocolBufferException
+import java.awt.Component
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.awt.event.KeyEvent
+import java.io.FileNotFoundException
+import java.io.IOException
+import javax.swing.JFileChooser
+import javax.swing.JMenu
+import javax.swing.JMenuItem
+import javax.swing.JOptionPane
+import javax.swing.KeyStroke
 
 class FileMenu(private val view: ApplicationView, private val parent: Component, private val proj: ProjectController) : JMenu("File") {
 	private val newMenu = JMenuItem("New").apply {

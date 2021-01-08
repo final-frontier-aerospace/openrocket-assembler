@@ -1,17 +1,16 @@
 package com.ffaero.openrocketassembler.controller
 
-import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.Configuration
-import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.ConfigurationOrBuilder
-import java.io.File
+import com.ffaero.openrocketassembler.FileFormat
+import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.model.ComponentFile
 import com.ffaero.openrocketassembler.model.proto.Bug8188OuterClass.Bug8188
+import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.Configuration
+import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.ConfigurationOrBuilder
 import com.google.protobuf.ByteString
-import com.ffaero.openrocketassembler.FileSystem
-import java.io.FileOutputStream
-import java.io.ByteArrayInputStream
-import org.apache.commons.io.IOUtils
+import java.io.File
 import java.io.FileInputStream
-import com.ffaero.openrocketassembler.FileFormat
+import java.io.FileOutputStream
+import org.apache.commons.io.IOUtils
 
 class ConfigurationController(public val proj: ProjectController) : DispatcherBase<ConfigurationListener, ConfigurationListenerList>(ConfigurationListenerList()) {
 	public val names: List<String>

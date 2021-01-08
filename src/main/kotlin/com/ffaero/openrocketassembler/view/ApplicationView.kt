@@ -1,23 +1,23 @@
 package com.ffaero.openrocketassembler.view
 
-import javax.swing.JFrame
-import com.ffaero.openrocketassembler.view.menu.WindowMenu
-import java.awt.event.WindowEvent
-import java.awt.Dimension
-import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.controller.ProjectAdapter
-import javax.swing.JMenuBar
-import java.awt.event.WindowListener
-import com.ffaero.openrocketassembler.view.menu.FileMenu
-import java.io.File
-import javax.swing.UIManager
-import com.ffaero.openrocketassembler.view.menu.OpenRocketMenu
-import javax.swing.JOptionPane
-import javax.swing.JFileChooser
+import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.FileFormat
-import javax.swing.filechooser.FileNameExtensionFilter
+import com.ffaero.openrocketassembler.view.menu.FileMenu
+import com.ffaero.openrocketassembler.view.menu.OpenRocketMenu
+import com.ffaero.openrocketassembler.view.menu.WindowMenu
+import java.awt.Dimension
+import java.awt.event.WindowEvent
+import java.awt.event.WindowListener
+import java.io.File
 import java.io.IOException
+import javax.swing.filechooser.FileNameExtensionFilter
+import javax.swing.JFileChooser
+import javax.swing.JFrame
+import javax.swing.JMenuBar
+import javax.swing.JOptionPane
 import javax.swing.SpringLayout
+import javax.swing.UIManager
 
 class ApplicationView(internal val view: ViewManager, private val proj: ProjectController) {
 	private val frame = JFrame().apply {

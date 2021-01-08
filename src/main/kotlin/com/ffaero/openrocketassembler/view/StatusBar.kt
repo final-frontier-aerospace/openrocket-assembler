@@ -1,14 +1,14 @@
 package com.ffaero.openrocketassembler.view
 
-import java.awt.EventQueue
 import com.ffaero.openrocketassembler.controller.ApplicationAdapter
 import com.ffaero.openrocketassembler.controller.ApplicationController
-import javax.swing.JPanel
-import java.awt.Graphics
-import javax.swing.JLabel
 import java.awt.BorderLayout
 import java.awt.Color
+import java.awt.EventQueue
+import java.awt.Graphics
 import javax.swing.BorderFactory
+import javax.swing.JLabel
+import javax.swing.JPanel
 
 class StatusBar(private val app: ApplicationController) : JPanel() {
 	private var actuallyVisible = false

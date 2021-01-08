@@ -1,9 +1,9 @@
 package com.ffaero.openrocketassembler.view
 
-import java.awt.event.MouseAdapter
-import javax.swing.JScrollPane
-import java.awt.event.MouseEvent
 import java.awt.Color
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import javax.swing.JScrollPane
 
 class ConfigurationTabLabelCreate(private val tabs: ConfigurationTabView) : ConfigurationTabLabelBase(JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER)) {
 	init {

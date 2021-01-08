@@ -1,24 +1,21 @@
 package com.ffaero.openrocketassembler.view
 
-import com.ffaero.openrocketassembler.controller.ProjectController
-import com.ffaero.openrocketassembler.controller.ConfigurationController
-import javax.swing.JTabbedPane
 import com.ffaero.openrocketassembler.controller.ConfigurationAdapter
-import javax.swing.JPanel
-import java.awt.Color
+import com.ffaero.openrocketassembler.controller.ConfigurationController
+import com.ffaero.openrocketassembler.controller.ProjectController
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.JOptionPane
-import javax.swing.event.ChangeListener
-import javax.swing.event.ChangeEvent
-import javax.swing.JScrollPane
-import javax.swing.JPopupMenu
-import javax.swing.JMenuItem
-import java.awt.event.ActionListener
-import java.awt.event.ActionEvent
 import java.io.File
-import javax.swing.event.PopupMenuListener
+import javax.swing.event.ChangeEvent
+import javax.swing.event.ChangeListener
 import javax.swing.event.PopupMenuEvent
+import javax.swing.event.PopupMenuListener
+import javax.swing.JMenuItem
+import javax.swing.JOptionPane
+import javax.swing.JPopupMenu
+import javax.swing.JTabbedPane
 
 class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane() {
 	private var updating = false

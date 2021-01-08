@@ -1,12 +1,12 @@
 package com.ffaero.openrocketassembler.controller
 
-import javax.xml.transform.TransformerFactory
 import java.io.InputStream
-import javax.xml.parsers.DocumentBuilderFactory
-import org.w3c.dom.Element
 import java.io.OutputStream
+import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
+import javax.xml.transform.TransformerFactory
+import org.w3c.dom.Element
 
 class OpenRocketXML(stream: InputStream) {
 	companion object {

@@ -1,7 +1,7 @@
 package com.ffaero.openrocketassembler.controller.actions
 
-import java.util.PriorityQueue
 import com.ffaero.openrocketassembler.controller.DispatcherBase
+import java.util.PriorityQueue
 
 class ActionQueue {
 	private val queue = PriorityQueue<ActionTask<*>>()

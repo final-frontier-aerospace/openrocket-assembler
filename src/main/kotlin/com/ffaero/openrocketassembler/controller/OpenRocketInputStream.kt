@@ -1,10 +1,10 @@
 package com.ffaero.openrocketassembler.controller
 
-import java.io.InputStream
-import java.util.zip.ZipInputStream
-import java.util.zip.GZIPInputStream
 import java.io.BufferedInputStream
 import java.io.FilterInputStream
+import java.io.InputStream
+import java.util.zip.GZIPInputStream
+import java.util.zip.ZipInputStream
 
 class OpenRocketInputStream(stream: InputStream) : FilterInputStream(encapsulate(stream)) {
 	companion object {

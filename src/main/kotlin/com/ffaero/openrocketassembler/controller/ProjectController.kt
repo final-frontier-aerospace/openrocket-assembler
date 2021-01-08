@@ -1,15 +1,13 @@
 package com.ffaero.openrocketassembler.controller
 
-import java.io.File
+import com.ffaero.openrocketassembler.controller.actions.ActionRunner
+import com.ffaero.openrocketassembler.FileFormat
+import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
+import com.google.protobuf.ByteString
+import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import com.ffaero.openrocketassembler.FileFormat
-import com.ffaero.openrocketassembler.controller.actions.DefaultOpenRocketVersion
-import com.ffaero.openrocketassembler.controller.actions.OpenRocketDownloader
-import com.ffaero.openrocketassembler.controller.actions.ActionRunner
-import com.google.protobuf.ByteString
-import com.ffaero.openrocketassembler.FileSystem
 
 class ProjectController(public val app: ApplicationController, internal val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
 	private var stopped = false

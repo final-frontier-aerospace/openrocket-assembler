@@ -1,11 +1,11 @@
 package com.ffaero.openrocketassembler.view
 
-import javax.swing.JLabel
-import java.io.File
-import javax.swing.BorderFactory
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.io.File
+import javax.swing.BorderFactory
+import javax.swing.JLabel
 
 class RocketListItem(public val list: RocketList) : ListViewItem() {
 	private val label = JLabel()

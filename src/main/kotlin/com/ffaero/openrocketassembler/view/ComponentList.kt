@@ -1,21 +1,21 @@
 package com.ffaero.openrocketassembler.view
 
-import java.awt.event.MouseAdapter
-import com.ffaero.openrocketassembler.controller.ComponentController
 import com.ffaero.openrocketassembler.controller.ComponentAdapter
+import com.ffaero.openrocketassembler.controller.ComponentController
+import com.ffaero.openrocketassembler.model.TemplateFile
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.awt.EventQueue
+import java.io.File
+import javax.swing.event.PopupMenuEvent
+import javax.swing.event.PopupMenuListener
 import javax.swing.filechooser.FileNameExtensionFilter
 import javax.swing.JFileChooser
-import java.awt.event.MouseEvent
-import java.io.File
+import javax.swing.JMenuItem
 import javax.swing.JOptionPane
 import javax.swing.JPopupMenu
-import javax.swing.JMenuItem
-import javax.swing.event.PopupMenuListener
-import javax.swing.event.PopupMenuEvent
-import java.awt.event.ActionListener
-import java.awt.event.ActionEvent
-import java.awt.EventQueue
-import com.ffaero.openrocketassembler.model.TemplateFile
 
 class ComponentList(private val view: EditorPanel, private val comp: ComponentController) : ListView<ComponentListItem, File>() {
 	private val compListener = object : ComponentAdapter() {

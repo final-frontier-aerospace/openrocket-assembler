@@ -1,9 +1,9 @@
 package com.ffaero.openrocketassembler.view
 
-import java.awt.Dimension
-import java.awt.Container
-import java.awt.LayoutManager
 import java.awt.Component
+import java.awt.Container
+import java.awt.Dimension
+import java.awt.LayoutManager
 
 class ListViewLayoutManager<TItem : ListViewItem, TValue>(private val view: ListView<TItem, TValue>) : LayoutManager {
 	private val components: Array<Component>

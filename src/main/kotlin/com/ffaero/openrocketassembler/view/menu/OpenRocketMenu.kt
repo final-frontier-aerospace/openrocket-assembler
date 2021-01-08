@@ -1,23 +1,19 @@
 package com.ffaero.openrocketassembler.view.menu
 
-import com.ffaero.openrocketassembler.controller.ProjectController
-import java.awt.event.ActionListener
-import java.io.IOException
-import javax.swing.JMenu
-import java.awt.event.ActionEvent
-import javax.swing.JOptionPane
-import javax.swing.JMenuItem
-import java.awt.Component
 import com.ffaero.openrocketassembler.controller.OpenRocketAdapter
 import com.ffaero.openrocketassembler.controller.OpenRocketController
-import com.ffaero.openrocketassembler.controller.ProjectAdapter
-import javax.swing.JRadioButtonMenuItem
 import com.ffaero.openrocketassembler.controller.OpenRocketListener
+import com.ffaero.openrocketassembler.controller.ProjectAdapter
+import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.controller.ProjectListener
-import java.awt.event.HierarchyListener
-import java.awt.event.HierarchyEvent
-import java.awt.Container
 import com.ffaero.openrocketassembler.view.ListenerLifecycleManager
+import java.awt.Component
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.awt.event.HierarchyListener
+import javax.swing.JMenu
+import javax.swing.JMenuItem
+import javax.swing.JRadioButtonMenuItem
 
 class OpenRocketMenu(private val parent: Component, private val proj: ProjectController) : JMenu("OpenRocket") {
 	private val launchMenu = JMenuItem("Launch").apply {

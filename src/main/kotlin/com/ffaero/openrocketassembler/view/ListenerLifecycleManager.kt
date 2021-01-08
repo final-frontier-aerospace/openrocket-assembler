@@ -1,9 +1,9 @@
 package com.ffaero.openrocketassembler.view
 
-import java.awt.event.HierarchyListener
+import java.awt.Component
 import java.awt.Container
 import java.awt.event.HierarchyEvent
-import java.awt.Component
+import java.awt.event.HierarchyListener
 
 abstract class ListenerLifecycleManager : HierarchyListener {
 	private var oldParent: Container? = null
