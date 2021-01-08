@@ -193,16 +193,6 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 			})
 		}
 		
-		override fun mouseClicked(e: MouseEvent?) {
-			if (e == null) {
-				return
-			}
-			val src = e.getComponent()
-			if (e.getButton() == MouseEvent.BUTTON1 && src is ConfigurationTabLabel) {
-				setSelectedIndex(indexOfTabComponent(src))
-			}
-		}
-		
 		override fun mouseReleased(e: MouseEvent?) {
 			if (e == null) {
 				return
