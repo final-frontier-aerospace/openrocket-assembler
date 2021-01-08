@@ -50,6 +50,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 			})
 		}
 		revalidate()
+		repaint()
 	}
 	
 	protected fun doAdd(index: Int, v: TValue) {
@@ -62,6 +63,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 			++it.index
 		}
 		revalidate()
+		repaint()
 	}
 	
 	protected fun doRemove(index: Int) {
@@ -71,6 +73,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 			--it.index
 		}
 		revalidate()
+		repaint()
 	}
 	
 	protected fun doMove(fromIndex: Int, toIndex: Int) {
@@ -88,6 +91,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 			}
 		}
 		revalidate()
+		repaint()
 	}
 	
 	protected fun doChange(index: Int, v: TValue) {

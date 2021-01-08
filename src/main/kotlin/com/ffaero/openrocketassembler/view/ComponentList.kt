@@ -15,6 +15,7 @@ import javax.swing.event.PopupMenuEvent
 import java.awt.event.ActionListener
 import java.awt.event.ActionEvent
 import java.awt.EventQueue
+import com.ffaero.openrocketassembler.model.TemplateFile
 
 class ComponentList(private val view: EditorPanel, private val comp: ComponentController) : ListView<ComponentListItem, File>() {
 	private val compListener = object : ComponentAdapter() {
@@ -82,55 +83,77 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 			return null
 		}
 		val inv = ctx.getInvoker()
-		if (!(inv is ComponentListView)) {
+		if (!(inv is ComponentListItem)) {
 			return null
 		}
-		val parent = inv.getParent()
-		if (!(parent is ComponentListItem)) {
-			return null
-		}
-		return parent
-	}
-	
-	private val contextHoverer = object : PopupMenuListener {
-		private fun item(e: PopupMenuEvent?): ComponentListView? {
-			if (e == null) {
-				return null
-			}
-			val src = e.getSource()
-			if (!(src is JPopupMenu)) {
-				return null
-			}
-			val item = src.getInvoker()
-			if (!(item is ComponentListView)) {
-				return null
-			}
-			return item
-		}
-		
-		override fun popupMenuCanceled(e: PopupMenuEvent?) = Unit
-		
-		override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
-			item(e)?.hoverEnd()
-		}
-		
-		override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
-			item(e)?.hoverStart()
-		}
+		return inv
 	}
 	
 	private val contextMenu = JPopupMenu().apply {
-		add(JMenuItem("Edit").apply {
+		val new = JMenuItem("New").apply {
+			addActionListener(object : ActionListener {
+				override fun actionPerformed(e: ActionEvent?) {
+					if (fileChooser.showSaveDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
+						var file = fileChooser.getSelectedFile()
+						if (file != null) {
+							if (!file.getName().contains('.')) {
+								file = File(file.getPath() + ".ork")
+							}
+							if (comp.components.any { file.getAbsolutePath().equals(it.getAbsolutePath()) }) {
+								JOptionPane.showMessageDialog(this@ComponentList, "File is already in project:\n" + file.getPath(), "New", JOptionPane.ERROR_MESSAGE)
+								return
+							}
+							if (file.exists()) {
+								if (JOptionPane.showConfirmDialog(this@ComponentList, "File already exists.  Overwrite?", "New", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+									return
+								}
+							}
+							comp.create(getItem(e)?.index ?: -1, file)
+						}
+					}
+				}
+			})
+		}
+		add(new)
+		val import = JMenuItem("Import").apply {
+			addActionListener(object : ActionListener {
+				override fun actionPerformed(e: ActionEvent?) {
+					if (fileChooser.showOpenDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
+						val file = fileChooser.getSelectedFile()
+						if (file != null && file.exists()) {
+							if (comp.components.any { file.getAbsolutePath().equals(it.getAbsolutePath()) }) {
+								JOptionPane.showMessageDialog(this@ComponentList, "File is already in project:\n" + file.getPath(), "Import", JOptionPane.ERROR_MESSAGE)
+							} else {
+								comp.add(getItem(e)?.index ?: -1, file)
+							}
+						}
+					}
+				}
+			})
+		}
+		add(import)
+		val sep1 = JPopupMenu.Separator()
+		add(sep1)
+		val edit = JMenuItem("Edit").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
 					val item = getItem(e)
 					if (item != null) {
-						comp.proj.app.openrocket.launch(comp.proj.openRocketVersion, item.file!!.getAbsolutePath())
+						if (item.file is TemplateFile) {
+							if (comp.proj.editingComponentTemplate) {
+								JOptionPane.showMessageDialog(this@ComponentList, "Template is already open in OpenRocket", "Edit", JOptionPane.ERROR_MESSAGE)
+							} else {
+								comp.proj.editComponentTemplate()
+							}
+						} else {
+							comp.proj.app.openrocket.launch(comp.proj.openRocketVersion, item.file!!.getAbsolutePath())
+						}
 					}
 				}
 			})
-		})
-		add(JMenuItem("Relocate").apply {
+		}
+		add(edit)
+		val relocate = JMenuItem("Relocate").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
 					val item = getItem(e)
@@ -150,8 +173,9 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 					}
 				}
 			})
-		})
-		add(JMenuItem("Remove").apply {
+		}
+		add(relocate)
+		val remove = JMenuItem("Remove").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
 					val item = getItem(e)
@@ -160,9 +184,11 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 					}
 				}
 			})
-		})
-		addSeparator()
-		add(JMenuItem("Append to Rocket").apply {
+		}
+		add(remove)
+		val sep2 = JPopupMenu.Separator()
+		add(sep2)
+		val append = JMenuItem("Append to Rocket").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
 					val item = getItem(e)
@@ -174,8 +200,9 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 					}
 				}
 			})
-		})
-		add(JMenuItem("Move Up").apply {
+		}
+		add(append)
+		val moveUp = JMenuItem("Move Up").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
 					val item = getItem(e)
@@ -184,8 +211,9 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 					}
 				}
 			})
-		})
-		add(JMenuItem("Move Down").apply {
+		}
+		add(moveUp)
+		val moveDown = JMenuItem("Move Down").apply {
 			addActionListener(object : ActionListener {
 				override fun actionPerformed(e: ActionEvent?) {
 					val item = getItem(e)
@@ -194,21 +222,70 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 					}
 				}
 			})
-		})
-		addPopupMenuListener(contextHoverer)
-	}
-	
-	override fun create(): ComponentListItem = ComponentListItem().apply {
-		addMouseListener(object : MouseAdapter() {
-			override fun mouseReleased(e: MouseEvent?) {
+		}
+		add(moveDown)
+		addPopupMenuListener(object : PopupMenuListener {
+			private fun item(e: PopupMenuEvent?): ComponentListItem? {
 				if (e == null) {
-					return
+					return null
 				}
-				if (e.isPopupTrigger()) {
-					contextMenu.show(e.getComponent(), e.getX(), e.getY())
+				val src = e.getSource()
+				if (!(src is JPopupMenu)) {
+					return null
+				}
+				val item = src.getInvoker()
+				if (!(item is ComponentListItem)) {
+					return null
+				}
+				return item
+			}
+			
+			override fun popupMenuCanceled(e: PopupMenuEvent?) = Unit
+			
+			override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
+				item(e)?.hoverEnd()
+			}
+			
+			override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
+				val i = item(e)
+				if (i != null) {
+					i.hoverStart()
+					edit.setVisible(true)
+					sep1.setVisible(true)
+					val mainActions = !(i.file is TemplateFile)
+					relocate.setVisible(mainActions)
+					remove.setVisible(mainActions)
+					sep2.setVisible(mainActions)
+					append.setVisible(mainActions)
+					moveUp.setVisible(mainActions)
+					moveDown.setVisible(mainActions)
+				} else {
+					edit.setVisible(false)
+					sep1.setVisible(false)
+					relocate.setVisible(false)
+					remove.setVisible(false)
+					sep2.setVisible(false)
+					append.setVisible(false)
+					moveUp.setVisible(false)
+					moveDown.setVisible(false)
 				}
 			}
 		})
+	}
+	
+	val mouseListener = object : MouseAdapter() {
+		override fun mouseReleased(e: MouseEvent?) {
+			if (e == null) {
+				return
+			}
+			if (e.isPopupTrigger()) {
+				contextMenu.show(e.getComponent(), e.getX(), e.getY())
+			}
+		}
+	}
+	
+	override fun create(): ComponentListItem = ComponentListItem().apply {
+		addMouseListener(mouseListener)
 	}
 
 	override fun set(item: ComponentListItem, v: File) {
@@ -226,84 +303,10 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 				comp.removeListener(compListener)
 			}
 		})
-		prefix = arrayOf(
-			ComponentListView(true).apply {
-				text = "template.ork"
-				val ctx = JPopupMenu().apply {
-					add(JMenuItem("Edit").apply {
-						addActionListener(object : ActionListener {
-							override fun actionPerformed(e: ActionEvent?) {
-								if (comp.proj.editingComponentTemplate) {
-									JOptionPane.showMessageDialog(this@ComponentList, "Template is already open in OpenRocket", "Edit", JOptionPane.ERROR_MESSAGE)
-								} else {
-									comp.proj.editComponentTemplate()
-								}
-							}
-						})
-					})
-					addPopupMenuListener(contextHoverer)
-				}
-				addMouseListener(object : MouseAdapter() {
-					override fun mouseReleased(e: MouseEvent?) {
-						if (e == null) {
-							return
-						}
-						if (e.isPopupTrigger()) {
-							ctx.show(e.getComponent(), e.getX(), e.getY())
-						}
-					}
-				})
-			}
-		)
-		suffix = arrayOf(
-			ComponentListView(true).apply {
-				text = "Create new component..."
-				addMouseListener(object : MouseAdapter() {
-					override fun mouseClicked(e: MouseEvent?) {
-						if (e == null) {
-							return
-						}
-						if (e.getButton() == MouseEvent.BUTTON1 && fileChooser.showSaveDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
-							var file = fileChooser.getSelectedFile()
-							if (file != null) {
-								if (!file.getName().contains('.')) {
-									file = File(file.getPath() + ".ork")
-								}
-								if (comp.components.any { file.getAbsolutePath().equals(it.getAbsolutePath()) }) {
-									JOptionPane.showMessageDialog(this@ComponentList, "File is already in project:\n" + file.getPath(), "Import", JOptionPane.ERROR_MESSAGE)
-									return
-								}
-								if (file.exists()) {
-									if (JOptionPane.showConfirmDialog(this@ComponentList, "File already exists.  Overwrite?", "Create", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
-										return
-									}
-								}
-								comp.create(file)
-							}
-						}
-					}
-				})
-			},
-			ComponentListView(true).apply {
-				text = "Import existing component..."
-				addMouseListener(object : MouseAdapter() {
-					override fun mouseClicked(e: MouseEvent?) {
-						if (e == null) {
-							return
-						}
-						if (e.getButton() == MouseEvent.BUTTON1 && fileChooser.showOpenDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
-							val file = fileChooser.getSelectedFile()
-							if (file != null && file.exists()) {
-								if (comp.components.any { file.getAbsolutePath().equals(it.getAbsolutePath()) }) {
-									JOptionPane.showMessageDialog(this@ComponentList, "File is already in project:\n" + file.getPath(), "Import", JOptionPane.ERROR_MESSAGE)
-								} else {
-									comp.add(file)
-								}
-							}
-						}
-					}
-				})
-			}
-		)
+		addMouseListener(mouseListener)
+		prefix = arrayOf(create().apply {
+			set(this, TemplateFile())
+			index = 0
+		})
 	}
 }

@@ -116,8 +116,7 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 				}
 			}
 		}
-		list.forEach {
-			System.out.println("removeComponent")
+		list.reversed().forEach {
 			removeComponent(it.first, it.second)
 		}
 	}

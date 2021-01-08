@@ -19,19 +19,25 @@ class ComponentController(public val proj: ProjectController) : DispatcherBase<C
 	
 	internal fun findComponent(id: Int): ComponentFile? = lookup.get(id)
 	
-	public fun add(file: File) {
+	public fun add(index: Int, file: File) {
+		val idx: Int
+		if (index < 0) {
+			idx = data.size
+		} else {
+			idx = index
+		}
 		val comp = ComponentFile(proj.makeID(), file)
-		data.add(comp)
+		data.add(idx, comp)
 		lookup.put(comp.id, comp)
 		proj.modified = true
-		listener.onComponentAdded(this, data.size - 1, comp)
+		listener.onComponentAdded(this, idx, comp)
 	}
 	
-	public fun create(file: File) {
+	public fun create(index: Int, file: File) {
 		FileOutputStream(file).use {
 			proj.componentTemplate.writeTo(it)
 		}
-		add(file)
+		add(index, file)
 	}
 	
 	public fun remove(index: Int) {
