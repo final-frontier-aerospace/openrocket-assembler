@@ -142,7 +142,7 @@ class ConfigurationController(public val proj: ProjectController) : DispatcherBa
 		val model = proj.model.getConfigurationsBuilder(configIndex)
 		val file = FileSystem.getTempFile(model, model.getName() + ".ork")
 		OpenRocketOutputStream(FileOutputStream(file)).use { out ->
-			OpenRocketInputStream(model.getFileOutline().newInput()).use { outlineIn ->
+			OpenRocketInputStream(getFileOutlineAt(configIndex).newInput()).use { outlineIn ->
 				while (true) {
 					val outlineEnt = outlineIn.getNextEntry()
 					if (outlineEnt == null) {
