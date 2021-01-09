@@ -8,7 +8,7 @@ import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import java.io.InputStreamReader
 import java.net.URL
-import java.util.LinkedList
+import java.util.*
 
 class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 	companion object {
@@ -47,15 +47,15 @@ class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 							val c2 = n2[i]
 							if (c1 != c2) {
 								if (wasDigit) {
-									if (c1 >= '0' && c1 <= '9') {
+									if (c1 in '0'..'9') {
 										return -1
-									} else if (c2 >= '0' && c2 <= '9') {
+									} else if (c2 in '0'..'9') {
 										return 1
 									}
 								}
 								return c2 - c1
 							}
-							wasDigit = c1 >= '0' && c1 <= '9'
+							wasDigit = c1 in '0'..'9'
 							++i
 						}
 						return n2.length - n1.length
@@ -66,7 +66,7 @@ class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 					controller.cache.addOpenRocketVersions(OpenRocketVersion.newBuilder().setName(it.first.name).setFilename(it.second.name).setDownloadURL(it.second.downloadURL).build())
 				}
 				val now = System.currentTimeMillis()
-				controller.cache.setOpenRocketVersionsLastUpdate(now)
+				controller.cache.openRocketVersionsLastUpdate = now
 				controller.writeCache()
 				controller.openrocket.fireUpdated()
 				enqueueAction(controller, now + updatePeriod)
@@ -74,8 +74,8 @@ class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 		}
 	}
 	
-	public fun checkNow(controller: ApplicationController) = enqueueAction(controller, 0)
+	fun checkNow(controller: ApplicationController) = enqueueAction(controller, 0)
 
-	override fun addListeners(controller: ApplicationController) = enqueueAction(controller, controller.cache.getOpenRocketVersionsLastUpdate() + updatePeriod)
+	override fun addListeners(controller: ApplicationController) = enqueueAction(controller, controller.cache.openRocketVersionsLastUpdate + updatePeriod)
 	override fun removeListeners(controller: ApplicationController) = dequeueAction(controller)
 }

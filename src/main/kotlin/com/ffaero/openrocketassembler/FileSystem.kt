@@ -1,7 +1,7 @@
 package com.ffaero.openrocketassembler
 
-import java.io.File
 import net.harawata.appdirs.AppDirsFactory
+import java.io.File
 
 object FileSystem {
 	private const val publisher = "ffaero"
@@ -11,6 +11,6 @@ object FileSystem {
 	private val cacheDir = File(appDirs.getUserCacheDir(application, version, publisher)).apply { mkdirs() }
 	private val tempDir = File(File(appDirs.getUserDataDir(application, version, publisher)), "Temp").apply { mkdirs() }
 	
-	public fun getCacheFile(name: String) = File(cacheDir, name)
-	public fun getTempFile(owner: Any, name: String) = File(tempDir, String.format("%08X-%s", owner.hashCode(), name))
+	fun getCacheFile(name: String) = File(cacheDir, name)
+	fun getTempFile(owner: Any, name: String) = File(tempDir, String.format("%08X-%s", owner.hashCode(), name))
 }

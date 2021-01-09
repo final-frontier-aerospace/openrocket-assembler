@@ -17,7 +17,7 @@ class DefaultOpenRocketVersion : ActionBase<ProjectController>() {
 	override fun runAction(controller: ProjectController) {
 		val version = controller.openRocketVersion
 		val versions = controller.app.openrocket.versions
-		if ((version.isEmpty() || !versions.contains(version)) && !versions.isEmpty()) {
+		if ((version.isEmpty() || !versions.contains(version)) && versions.isNotEmpty()) {
 			controller.openRocketVersion = versions.first()
 		}
 	}

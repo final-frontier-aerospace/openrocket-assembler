@@ -14,18 +14,18 @@ class StatusBar(private val app: ApplicationController) : JPanel() {
 	private var actuallyVisible = false
 	
 	private val label = JLabel().apply {
-		setText("*")
-		setForeground(Color.black)
+		text = "*"
+		foreground = Color.black
 	}
 	
 	private val appListener = object : ApplicationAdapter() {
 		override fun onBackgroundStatus(sender: ApplicationController, status: String) {
 			EventQueue.invokeLater {
-				actuallyVisible = !status.isEmpty()
+				actuallyVisible = status.isNotEmpty()
 				if (actuallyVisible) {
-					label.setText(status)
+					label.text = status
 				} else {
-					label.setText("*")
+					label.text = "*"
 				}
 			}
 		}
@@ -38,9 +38,9 @@ class StatusBar(private val app: ApplicationController) : JPanel() {
 	}
 	
 	init {
-		setBackground(Color(224, 224, 224))
-		setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10))
-		setLayout(BorderLayout())
+		background = Color(224, 224, 224)
+		border = BorderFactory.createEmptyBorder(5, 10, 5, 10)
+		layout = BorderLayout()
 		add(label, BorderLayout.CENTER)
 		addHierarchyListener(object : ListenerLifecycleManager() {
 			override fun addListeners() {

@@ -9,24 +9,21 @@ import javax.swing.SwingUtilities
 open class MouseHierarchyTrampoline : MouseListener {
 	companion object {
 		private val eventEnabled = Component::class.java.getDeclaredMethod("eventEnabled", AWTEvent::class.java).apply {
-			setAccessible(true)
+			isAccessible = true
 		}
 	}
 	
 	protected open fun proxyEvent(e: MouseEvent): Boolean = true
 	
 	private fun event(e: MouseEvent?) {
-		val src_ = e?.getSource()
-		if (src_ == null || !(src_ is Component) || !proxyEvent(e)) {
+		val source = e?.source
+		if (source == null || source !is Component || !proxyEvent(e)) {
 			return
 		}
 		var ev = e
-		var src: Component = src_
+		var src: Component = source
 		while (true) {
-			val parent = src.getParent()
-			if (parent == null) {
-				return
-			}
+			val parent = src.parent ?: return
 			ev = SwingUtilities.convertMouseEvent(src, ev, parent)
 			if (eventEnabled.invoke(parent, ev) as Boolean) {
 				parent.dispatchEvent(ev)

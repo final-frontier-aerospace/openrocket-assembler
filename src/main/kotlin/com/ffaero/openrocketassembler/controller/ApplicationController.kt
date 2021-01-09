@@ -1,7 +1,7 @@
 package com.ffaero.openrocketassembler.controller
 
-import com.ffaero.openrocketassembler.controller.actions.ActionFactory
 import com.ffaero.openrocketassembler.FileSystem
+import com.ffaero.openrocketassembler.controller.actions.ActionFactory
 import com.ffaero.openrocketassembler.model.proto.CacheOuterClass.Cache
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import java.io.File
@@ -24,31 +24,31 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 	internal val actions = ActionFactory()
 	private var writeCacheOnExit = false
 	
-	private var backgroundStatus_ = ""
-	public var backgroundStatus: String
-			get() = backgroundStatus_
+	private var _backgroundStatus = ""
+	var backgroundStatus: String
+			get() = _backgroundStatus
 			set(value) {
-				backgroundStatus_ = value
+				_backgroundStatus = value
 				listener.onBackgroundStatus(this, value)
 			}
 	
-	public var windowSplit: Float
-			get() = cache.getWindowSplit()
+	var windowSplit: Float
+			get() = cache.windowSplit
 			set(value) {
-				if (value != cache.getWindowSplit()) {
-					cache.setWindowSplit(value)
+				if (value != cache.windowSplit) {
+					cache.windowSplit = value
 					writeCacheOnExit = true
 					listener.onWindowSplitChanged(this, value)
 				}
 			}
 	
-	public val openrocket = OpenRocketController(this)
+	val openrocket = OpenRocketController(this)
 	
 	init {
 		actions.addListeners(actions.applicationActions, this)
 	}
 	
-	public fun stop() {
+	fun stop() {
 		actions.removeListeners(actions.applicationActions, this)
 		actions.stop()
 		if (writeCacheOnExit) {
@@ -56,10 +56,10 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 		}
 	}
 	
-	public fun addProject(model: Project.Builder, file: File?) = listener.onProjectAdded(this, ProjectController(this, model, file))
+	fun addProject(model: Project.Builder, file: File?) = listener.onProjectAdded(this, ProjectController(this, model, file))
 	internal fun removeProject(proj: ProjectController) = listener.onProjectRemoved(this, proj)
 	
-	public fun writeCache() {
+	fun writeCache() {
 		try {
 			FileOutputStream(cacheFile).use {
 				cache.build().writeTo(it)

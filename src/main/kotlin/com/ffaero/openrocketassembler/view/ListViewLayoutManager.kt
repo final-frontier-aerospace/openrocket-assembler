@@ -7,29 +7,20 @@ import java.awt.LayoutManager
 
 class ListViewLayoutManager<TItem : ListViewItem, TValue>(private val view: ListView<TItem, TValue>) : LayoutManager {
 	private val components: Array<Component>
-			get() = view.prefix.plus(view.items.filterIsInstance<Component>()).plus(view.suffix)
+			get() = view.prefix.plus(view.items.toList()).plus(view.suffix)
 	
 	override fun addLayoutComponent(name: String?, comp: Component?) = Unit
 	override fun removeLayoutComponent(comp: Component?) = Unit
-	
-	private fun layoutComponent(width: Int, y: Int, comp: Component): Int {
-		val pref = comp.getPreferredSize()
-		val max = comp.getMaximumSize()
-		val compWidth = minOf(max.width, width)
-		comp.setSize(compWidth, pref.height)
-		comp.setLocation((width - compWidth) / 2, y)
-		return y + pref.height
-	}
 
 	override fun layoutContainer(parent: Container?) {
 		if (parent == null) {
 			return
 		}
-		val width = parent.getWidth()
+		val width = parent.width
 		var y = 0
 		components.forEach {
-			val pref = it.getPreferredSize()
-			val max = it.getMaximumSize()
+			val pref = it.preferredSize
+			val max = it.maximumSize
 			val compWidth = minOf(max.width, width)
 			it.setSize(compWidth, pref.height)
 			it.setLocation((width - compWidth) / 2, y)
@@ -37,22 +28,22 @@ class ListViewLayoutManager<TItem : ListViewItem, TValue>(private val view: List
 		}
 	}
 
-	override fun minimumLayoutSize(parent: Container?): Dimension? {
+	override fun minimumLayoutSize(parent: Container?): Dimension {
 		var w = 0
 		var h = 0
 		components.forEach {
-			val min = it.getMinimumSize()
+			val min = it.minimumSize
 			w = maxOf(w, min.width)
 			h += min.height
 		}
 		return Dimension(w, h)
 	}
 
-	override fun preferredLayoutSize(parent: Container?): Dimension? {
+	override fun preferredLayoutSize(parent: Container?): Dimension {
 		var w = 0
 		var h = 0
 		components.forEach {
-			val pref = it.getPreferredSize()
+			val pref = it.preferredSize
 			w = maxOf(w, pref.width)
 			h += pref.height
 		}

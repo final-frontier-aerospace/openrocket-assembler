@@ -4,7 +4,6 @@ import com.ffaero.openrocketassembler.controller.ApplicationController
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import com.ffaero.openrocketassembler.view.ViewManager
 import java.io.File
-import java.io.FileFilter
 import java.io.IOException
 
 fun main(args: Array<String>) {
@@ -22,10 +21,8 @@ fun main(args: Array<String>) {
 		}
 	}
 	if (!opened) {
-		val files = File(".").listFiles(object : FileFilter {
-			override fun accept(pathname: File) = pathname.extension.equals(FileFormat.extension)
-		})
-		if (files.size == 1) {
+		val files = File(".").listFiles { pathname -> pathname.extension == FileFormat.extension }
+		if (files?.size == 1) {
 			try {
 				controller.addProject(Project.newBuilder(), files[0])
 				opened = true

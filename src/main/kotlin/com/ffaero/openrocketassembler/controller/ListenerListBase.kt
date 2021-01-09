@@ -5,7 +5,7 @@ import java.util.function.Consumer
 
 abstract class ListenerListBase<TListener> {
 	private class TrackingSet<TListener>(copy: HashSet<TListener>) : HashSet<TListener>(copy) {
-		public var forEaches = 0
+		var forEaches = 0
 	}
 	
 	private val lock = ReentrantLock()
@@ -24,11 +24,11 @@ abstract class ListenerListBase<TListener> {
 		}
 	}
 	
-	public fun add(e: TListener) = cow().add(e)
+	fun add(e: TListener) = cow().add(e)
 	
-	public fun remove(e: TListener) = cow().remove(e)
+	fun remove(e: TListener) = cow().remove(e)
 	
-	public fun forEach(action: Consumer<TListener>) {
+	fun forEach(action: Consumer<TListener>) {
 		lock.lock()
 		try {
 			val set = set

@@ -1,13 +1,13 @@
 package com.ffaero.openrocketassembler.controller.actions
 
+import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.controller.ProjectAdapter
 import com.ffaero.openrocketassembler.controller.ProjectController
-import com.ffaero.openrocketassembler.FileSystem
+import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URL
-import org.apache.commons.io.IOUtils
 
 class OpenRocketDownloader : ActionBase<ProjectController>() {
 	private val projectListener = object : ProjectAdapter() {
@@ -19,8 +19,8 @@ class OpenRocketDownloader : ActionBase<ProjectController>() {
 		if (ver != null) {
 			val file = FileSystem.getCacheFile(ver.getFilename())
 			if (!file.exists()) {
-				ActionReport(controller.app, "Downloading " + ver.getName() + "...").use {
-					val tmpFile = File(file.getParentFile(), "~" + file.getName())
+				ActionReport(controller.app, "Downloading " + ver.name + "...").use {
+					val tmpFile = File(file.parentFile, "~" + file.name)
 					try {
 						URL(ver.getDownloadURL()).openStream().use { i ->
 							FileOutputStream(tmpFile).use { o ->

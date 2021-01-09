@@ -270,6 +270,7 @@ $RECYCLE.BIN/
 
 .classpath
 .project
+.idea/
 
 *.ork
 *.orka

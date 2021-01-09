@@ -7,28 +7,28 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	protected abstract fun create(): TItem
 	protected abstract fun set(item: TItem, v: TValue)
 	
-	private var prefix_: Array<Component> = arrayOf()
-	public var prefix: Array<Component>
-			get() = prefix_
+	private var _prefix: Array<Component> = arrayOf()
+	var prefix: Array<Component>
+			get() = _prefix
 			set(value) {
-				prefix_.forEach {
+				_prefix.forEach {
 					remove(it)
 				}
-				prefix_ = value
+				_prefix = value
 				value.forEach {
 					add(it)
 				}
 				revalidate()
 			}
 	
-	private var suffix_: Array<Component> = arrayOf()
-	public var suffix: Array<Component>
-			get() = suffix_
+	private var _suffix: Array<Component> = arrayOf()
+	var suffix: Array<Component>
+			get() = _suffix
 			set(value) {
-				suffix_.forEach {
+				_suffix.forEach {
 					remove(it)
 				}
-				suffix_ = value
+				_suffix = value
 				value.forEach {
 					add(it)
 				}
@@ -67,7 +67,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	}
 	
 	protected fun doRemove(index: Int) {
-		remove(items.get(index))
+		remove(items[index])
 		items.removeAt(index)
 		items.subList(index, items.size).forEach {
 			--it.index
@@ -77,7 +77,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	}
 	
 	protected fun doMove(fromIndex: Int, toIndex: Int) {
-		val tmp = items.get(fromIndex)
+		val tmp = items[fromIndex]
 		items.removeAt(fromIndex)
 		tmp.index = toIndex
 		items.add(toIndex, tmp)
@@ -95,10 +95,10 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	}
 	
 	protected fun doChange(index: Int, v: TValue) {
-		set(items.get(index), v)
+		set(items[index], v)
 	}
 	
 	init {
-		setLayout(ListViewLayoutManager(this))
+		layout = ListViewLayoutManager(this)
 	}
 }

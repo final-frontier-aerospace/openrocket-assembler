@@ -1,12 +1,12 @@
 package com.ffaero.openrocketassembler.controller
 
+import org.w3c.dom.Element
 import java.io.InputStream
 import java.io.OutputStream
 import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
-import javax.xml.transform.TransformerFactory
-import org.w3c.dom.Element
 
 class OpenRocketXML(stream: InputStream) {
 	companion object {
@@ -18,14 +18,14 @@ class OpenRocketXML(stream: InputStream) {
 	private val subcomponents = makePath("rocket", "subcomponents", "stage", "subcomponents")
 	
 	private fun makePath(vararg path: String): Element {
-		var el = doc.getDocumentElement()
+		var el = doc.documentElement
 		path.forEach {
-			val list = el.getChildNodes()
+			val list = el.childNodes
 			var i = 0
 			var found = false
-			while (i < list.getLength()) {
+			while (i < list.length) {
 				val node = list.item(i)
-				if (node is Element && node.getTagName().equals(it)) {
+				if (node is Element && node.tagName == it) {
 					el = node
 					found = true
 					break
@@ -41,10 +41,10 @@ class OpenRocketXML(stream: InputStream) {
 		return el
 	}
 	
-	public fun getSubcomponents() = sequence {
-		val list = subcomponents.getChildNodes()
+	fun getSubcomponents() = sequence {
+		val list = subcomponents.childNodes
 		var i = 0
-		while (i < list.getLength()) {
+		while (i < list.length) {
 			val node = list.item(i)
 			if (node is Element) {
 				yield(node)
@@ -53,17 +53,17 @@ class OpenRocketXML(stream: InputStream) {
 		}
 	}
 	
-	public fun addSubcomponents(comp: Sequence<Element>) = comp.forEach {
+	fun addSubcomponents(comp: Sequence<Element>) = comp.forEach {
 		val clone = it.cloneNode(true)
 		doc.adoptNode(clone)
 		subcomponents.appendChild(clone)
 	}
 	
-	public fun clearSubcomponents() {
+	fun clearSubcomponents() {
 		while (subcomponents.hasChildNodes()) {
-			subcomponents.removeChild(subcomponents.getFirstChild())
+			subcomponents.removeChild(subcomponents.firstChild)
 		}
 	}
 	
-	public fun write(stream: OutputStream) = transformer.transform(DOMSource(doc), StreamResult(stream))
+	fun write(stream: OutputStream) = transformer.transform(DOMSource(doc), StreamResult(stream))
 }

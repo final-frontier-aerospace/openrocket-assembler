@@ -1,22 +1,22 @@
 package com.ffaero.openrocketassembler.controller
 
-import com.ffaero.openrocketassembler.controller.actions.ActionRunner
 import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.FileSystem
+import com.ffaero.openrocketassembler.controller.actions.ActionRunner
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import com.google.protobuf.ByteString
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-class ProjectController(public val app: ApplicationController, internal val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
+class ProjectController(val app: ApplicationController, internal val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
 	private var stopped = false
-	private var modified_ = false
+	private var _modified = false
 	
-	public val components = ComponentController(this)
-	public val configurations = ConfigurationController(this)
+	val components = ComponentController(this)
+	val configurations = ConfigurationController(this)
 	
-	public var file: File?
+	var file: File?
 			get() = file_
 			set(value) {
 				if (value != file_) {
@@ -25,49 +25,43 @@ class ProjectController(public val app: ApplicationController, internal val mode
 				}
 			}
 	
-	public var modified: Boolean
-			get() = modified_
+	var modified: Boolean
+			get() = _modified
 			set(value) {
 				if (!value) {
 					throw IllegalArgumentException("Cannot set modified to false, instead save the file")
 				}
-				if (!modified_ && !ActionRunner.isRunner.get()) {
-					modified_ = true
+				if (!_modified && !ActionRunner.isRunner.get()) {
+					_modified = true
 					listener.onStatus(this, true)
 				}
 			}
 	
-	public val lastSavedVersion: Int
-			get() = model.getVersion()
+	val lastSavedVersion: Int
+			get() = model.version
 	
-	public var openRocketVersion: String
-			get() {
-				val ver = model.getOpenRocketVersion()
-				if (ver == null) {
-					return ""
-				}
-				return ver
-			}
+	var openRocketVersion: String
+			get() = model.openRocketVersion ?: ""
 			set(value) {
-				if (model.getOpenRocketVersion() != value) {
-					model.setOpenRocketVersion(value)
+				if (model.openRocketVersion != value) {
+					model.openRocketVersion = value
 					listener.onOpenRocketVersionChange(this, value)
 					modified = true
 				}
 			}
 	
-	public var componentTemplate: ByteString
+	var componentTemplate: ByteString
 			get() {
-				val temp = model.getComponentTemplate()
-				if (temp.isEmpty()) {
-					return FileFormat.emptyORK
+				val temp = model.componentTemplate
+				return if (temp.isEmpty) {
+					FileFormat.emptyORK
 				} else {
-					return temp
+					temp
 				}
 			}
 			set(value) {
-				if (!model.getComponentTemplate().equals(value)) {
-					model.setComponentTemplate(value)
+				if (model.componentTemplate != value) {
+					model.componentTemplate = value
 					modified = true
 				}
 			}
@@ -76,7 +70,7 @@ class ProjectController(public val app: ApplicationController, internal val mode
 		app.actions.addListeners(app.actions.projectActions, this)
 	}
 	
-	public fun stop() {
+	fun stop() {
 		if (stopped) {
 			throw IllegalStateException("Cannot stop a project that has already been stopped")
 		}
@@ -87,7 +81,7 @@ class ProjectController(public val app: ApplicationController, internal val mode
 	}
 	
 	private fun markUnmodified() {
-		modified_ = false
+		_modified = false
 		listener.onStatus(this, false)
 	}
 	
@@ -98,13 +92,13 @@ class ProjectController(public val app: ApplicationController, internal val mode
 		markUnmodified()
 	}
 	
-	public fun reset() {
+	fun reset() {
 		file = null
 		model.clear()
 		afterLoad(null)
 	}
 	
-	public fun load(file: File) {
+	fun load(file: File) {
 		FileInputStream(file).use {
 			model.clear()
 			model.mergeFrom(it)
@@ -112,40 +106,40 @@ class ProjectController(public val app: ApplicationController, internal val mode
 		afterLoad(file)
 	}
 	
-	public fun save(file: File) {
+	fun save(file: File) {
 		FileOutputStream(file).use {
-			model.setVersion(FileFormat.version)
+			model.version = FileFormat.version
 			components.beforeSave(file, model)
 			model.build().writeTo(it)
 		}
 		markUnmodified()
 	}
 	
-	public fun makeID(): Int {
-		val id = model.getNextID()
-		model.setNextID(id + 1)
+	fun makeID(): Int {
+		val id = model.nextID
+		model.nextID = id + 1
 		return id
 	}
 	
-	private var editingComponentTemplate_ = false
-	public val editingComponentTemplate
-			get() = editingComponentTemplate_
+	private var _editingComponentTemplate = false
+	val editingComponentTemplate
+			get() = _editingComponentTemplate
 	
-	public fun editComponentTemplate() {
-		if (editingComponentTemplate_) {
+	fun editComponentTemplate() {
+		if (_editingComponentTemplate) {
 			return
 		}
-		editingComponentTemplate_ = true
+		_editingComponentTemplate = true
 		val file = FileSystem.getTempFile(this, "template.ork")
 		FileOutputStream(file).use {
 			componentTemplate.writeTo(it)
 		}
-		app.openrocket.launch(openRocketVersion, file.getAbsolutePath()) {
+		app.openrocket.launch(openRocketVersion, file.absolutePath) {
 			FileInputStream(file).use {
 				componentTemplate = ByteString.readFrom(it)
 			}
 			file.delete()
-			editingComponentTemplate_ = false
+			_editingComponentTemplate = false
 		}
 	}
 	

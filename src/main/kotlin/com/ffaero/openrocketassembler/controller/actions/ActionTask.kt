@@ -2,8 +2,8 @@ package com.ffaero.openrocketassembler.controller.actions
 
 import com.ffaero.openrocketassembler.controller.DispatcherBase
 
-class ActionTask<TController : DispatcherBase<*, *>>(public val action: ActionBase<TController>, public val controller: TController, public val time: Long) : Comparable<ActionTask<*>> {
-	public fun run() {
+class ActionTask<TController : DispatcherBase<*, *>>(val action: ActionBase<TController>, val controller: TController, val time: Long) : Comparable<ActionTask<*>> {
+	fun run() {
 		action.runAction(controller)
 	}
 	
@@ -13,7 +13,7 @@ class ActionTask<TController : DispatcherBase<*, *>>(public val action: ActionBa
 		if (other == null) {
 			return false
 		}
-		if (!(other is ActionTask<*>)) {
+		if (other !is ActionTask<*>) {
 			return false
 		}
 		return action == other.action && controller == other.controller

@@ -6,7 +6,7 @@ abstract class ActionBase<TController : DispatcherBase<*, *>> {
 	private var runner: ActionRunner? = null
 	private val controllers = HashSet<TController>()
 	
-	public abstract fun runAction(controller: TController)
+	abstract fun runAction(controller: TController)
 	protected abstract fun addListeners(controller: TController)
 	protected abstract fun removeListeners(controller: TController)
 	

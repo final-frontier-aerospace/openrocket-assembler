@@ -14,17 +14,17 @@ class OpenRocketInputStream(stream: InputStream) : FilterInputStream(encapsulate
 			val arr = ByteArray(4)
 			buf.read(arr)
 			buf.reset()
-			if (arr.contentEquals(byteArrayOf(0x50, 0x4B, 0x03, 0x04))) {
-				return ZipInputStream(buf)
+			return if (arr.contentEquals(byteArrayOf(0x50, 0x4B, 0x03, 0x04))) {
+				ZipInputStream(buf)
 			} else {
-				return GZIPInputStream(buf)
+				GZIPInputStream(buf)
 			}
 		}
 	}
 	
 	private var gotEntry = false
 	
-	public fun closeEntry() {
+	fun closeEntry() {
 		val s = `in`
 		if (s is ZipInputStream) {
 			s.closeEntry()
@@ -33,20 +33,20 @@ class OpenRocketInputStream(stream: InputStream) : FilterInputStream(encapsulate
 		}
 	}
 	
-	public fun getNextEntry(): OpenRocketEntry? {
+	fun getNextEntry(): OpenRocketEntry? {
 		val s = `in`
-		if (s is ZipInputStream) {
-			val entry = s.getNextEntry()
+		return if (s is ZipInputStream) {
+			val entry = s.nextEntry
 			if (entry == null) {
-				return null
+				null
 			} else {
-				return OpenRocketEntry(entry)
+				OpenRocketEntry(entry)
 			}
 		} else if (gotEntry) {
-			return null
+			null
 		} else {
 			gotEntry = true
-			return OpenRocketEntry.rocketXMLEntry
+			OpenRocketEntry.rocketXMLEntry
 		}
 	}
 }

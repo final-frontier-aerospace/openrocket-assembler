@@ -15,11 +15,11 @@ abstract class ListenerLifecycleManager : HierarchyListener {
 		if (e == null) {
 			return
 		}
-		val src = e.getSource()
-		if (!(src is Component)) {
+		val src = e.source
+		if (src !is Component) {
 			return
 		}
-		val parent = src.getParent()
+		val parent = src.parent
 		if (oldParent == null) {
 			if (parent != null) {
 				addListeners()

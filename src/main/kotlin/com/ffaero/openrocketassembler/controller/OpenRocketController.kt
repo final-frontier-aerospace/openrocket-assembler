@@ -3,7 +3,6 @@ package com.ffaero.openrocketassembler.controller
 import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.model.proto.OpenRocketVersionOuterClass.OpenRocketVersion
 import java.io.File
-import java.lang.Runnable
 
 class OpenRocketController(private val app: ApplicationController) : DispatcherBase<OpenRocketListener, OpenRocketListenerList>(OpenRocketListenerList()) {
 	private val java: String
@@ -14,36 +13,34 @@ class OpenRocketController(private val app: ApplicationController) : DispatcherB
 		if (exe.exists()) {
 			exe = File(bin, "javaw.exe")
 		}
-		if (exe.exists()) {
-			java = bin.getAbsolutePath()
+		java = if (exe.exists()) {
+			bin.absolutePath
 		} else {
-			java = "javaw"
+			"javaw"
 		}
 	}
 	
-	public val versions: List<String>
-			get() = app.cache.getOpenRocketVersionsList().map { it.getName() }
+	val versions: List<String>
+			get() = app.cache.openRocketVersionsList.map { it.name }
 	
 	internal fun fireUpdated() = listener.onOpenRocketVersionsUpdated(this, versions)
 	
-	public fun checkForUpdates() = app.actions.openRocketUpdateCheck.checkNow(app)
+	fun checkForUpdates() = app.actions.openRocketUpdateCheck.checkNow(app)
 	
-	internal fun lookupVersion(version: String): OpenRocketVersion? = app.cache.getOpenRocketVersionsList().find { it.getName().equals(version) }
+	internal fun lookupVersion(version: String): OpenRocketVersion? = app.cache.openRocketVersionsList.find { it.name == version }
 	
-	public fun launch(version: String, vararg args: String, death: Runnable? = null) {
+	fun launch(version: String, vararg args: String, death: Runnable? = null) {
 		val ver = lookupVersion(version)
 		if (ver == null) {
 			death?.run()
 			return
 		}
-		val proc = Runtime.getRuntime().exec(arrayOf(java, "-jar", FileSystem.getCacheFile(ver.getFilename()).getAbsolutePath()).plus(args))
+		val proc = Runtime.getRuntime().exec(arrayOf(java, "-jar", FileSystem.getCacheFile(ver.filename).absolutePath).plus(args))
 		if (death != null) {
-			Thread(object : Runnable {
-				override fun run() {
-					proc.waitFor()
-					death.run()
-				}
-			}).start()
+			Thread {
+				proc.waitFor()
+				death.run()
+			}.start()
 		}
 	}
 }
