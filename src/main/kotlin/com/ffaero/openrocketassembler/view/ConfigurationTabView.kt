@@ -22,10 +22,10 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 	
 	private val configListener = object : ConfigurationAdapter() {
 		override fun onConfigurationsReset(sender: ConfigurationController, names: List<String>) {
+			updating = true
 			while (tabCount > 1) {
 				removeTabAt(0)
 			}
-			updating = true
 			names.forEachIndexed { idx, it ->
 				ConfigurationTabLabel(this@ConfigurationTabView, it).apply {
 					val view = view
@@ -55,6 +55,9 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 		override fun onConfigurationRemoved(sender: ConfigurationController, index: Int) {
 			updating = true
 			removeTabAt(index)
+			if (index == tabCount - 1 && index > 0) {
+				selectedIndex = index - 1
+			}
 			updating = false
 		}
 
