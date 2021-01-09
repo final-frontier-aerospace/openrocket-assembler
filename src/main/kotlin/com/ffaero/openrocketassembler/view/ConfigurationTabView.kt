@@ -142,6 +142,17 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 					}
 				}
 			})
+			add(JMenuItem("Rename").apply {
+				addActionListener { e ->
+					val tab = getTab(e)
+					if (tab != null) {
+						val str = JOptionPane.showInputDialog(this@ConfigurationTabView, "Please enter a new name for the configuration:", "Rename", JOptionPane.QUESTION_MESSAGE)
+						if (str != null && str.isNotEmpty()) {
+							proj.configurations.rename(indexOfTabComponent(tab), str)
+						}
+					}
+				}
+			})
 			add(JMenuItem("Duplicate").apply {
 				addActionListener { e ->
 					val tab = getTab(e)
