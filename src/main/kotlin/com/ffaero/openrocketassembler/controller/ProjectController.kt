@@ -2,7 +2,7 @@ package com.ffaero.openrocketassembler.controller
 
 import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.FileSystem
-import com.ffaero.openrocketassembler.controller.actions.ActionRunner
+import com.ffaero.openrocketassembler.model.HistoryTransaction
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import com.google.protobuf.ByteString
 import java.io.File
@@ -11,8 +11,8 @@ import java.io.FileOutputStream
 
 class ProjectController(val app: ApplicationController, internal val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
 	private var stopped = false
-	private var _modified = false
-	
+
+	internal val history = HistoryController()
 	val components = ComponentController(this)
 	val configurations = ConfigurationController(this)
 	
@@ -24,29 +24,30 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 					listener.onFileChange(this, value)
 				}
 			}
-	
-	var modified: Boolean
-			get() = _modified
-			set(value) {
-				if (!value) {
-					throw IllegalArgumentException("Cannot set modified to false, instead save the file")
-				}
-				if (!_modified && !ActionRunner.isRunner.get()) {
-					_modified = true
-					listener.onStatus(this, true)
-				}
-			}
-	
+
 	val lastSavedVersion: Int
 			get() = model.version
 	
 	var openRocketVersion: String
-			get() = model.openRocketVersion ?: ""
+			get() {
+				val ver = model.openRocketVersion
+				val versions = app.openrocket.versions
+				return if ((ver.isNullOrEmpty() || !versions.contains(ver)) && versions.isNotEmpty()) {
+					versions.first()
+				} else {
+					ver ?: ""
+				}
+			}
 			set(value) {
-				if (model.openRocketVersion != value) {
-					model.openRocketVersion = value
-					listener.onOpenRocketVersionChange(this, value)
-					modified = true
+				val old = model.openRocketVersion
+				if (old != value) {
+					history.perform(HistoryTransaction("Setting OpenRocket Version").add {
+						model.openRocketVersion = value
+						listener.onOpenRocketVersionChange(this, openRocketVersion)
+					}.toUndo {
+						model.openRocketVersion = old
+						listener.onOpenRocketVersionChange(this, openRocketVersion)
+					})
 				}
 			}
 	
@@ -60,9 +61,13 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 				}
 			}
 			set(value) {
-				if (model.componentTemplate != value) {
-					model.componentTemplate = value
-					modified = true
+				val old = model.componentTemplate
+				if (old != value) {
+					history.perform(HistoryTransaction("Editing Component Template").add {
+						model.componentTemplate = value
+					}.toUndo {
+						model.componentTemplate = old
+					})
 				}
 			}
 	
@@ -79,17 +84,12 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 		app.removeProject(this)
 		app.actions.removeListeners(app.actions.projectActions, this)
 	}
-	
-	private fun markUnmodified() {
-		_modified = false
-		listener.onStatus(this, false)
-	}
-	
+
 	private fun afterLoad(file: File?) {
 		listener.onOpenRocketVersionChange(this, openRocketVersion)
 		components.afterLoad(file)
 		configurations.afterLoad()
-		markUnmodified()
+		history.reset()
 	}
 	
 	fun reset() {
@@ -112,7 +112,7 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 			components.beforeSave(file, model)
 			model.build().writeTo(it)
 		}
-		markUnmodified()
+		history.afterSave()
 	}
 	
 	fun makeID(): Int {

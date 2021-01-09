@@ -1,8 +1,11 @@
 package com.ffaero.openrocketassembler.view
 
 import com.ffaero.openrocketassembler.FileFormat
+import com.ffaero.openrocketassembler.controller.HistoryAdapter
+import com.ffaero.openrocketassembler.controller.HistoryController
 import com.ffaero.openrocketassembler.controller.ProjectAdapter
 import com.ffaero.openrocketassembler.controller.ProjectController
+import com.ffaero.openrocketassembler.view.menu.EditMenu
 import com.ffaero.openrocketassembler.view.menu.FileMenu
 import com.ffaero.openrocketassembler.view.menu.OpenRocketMenu
 import com.ffaero.openrocketassembler.view.menu.WindowMenu
@@ -93,7 +96,7 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 				return
 			}
 		}
-		if (proj.modified) {
+		if (proj.history.fileModified) {
 			when (JOptionPane.showConfirmDialog(frame, "Project has unsaved changes.\nSave before $action?", title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
 				JOptionPane.YES_OPTION -> {
 					if (!saveProject(proj.file, title)) {
@@ -135,6 +138,7 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 	init {
 		JMenuBar().apply {
 			add(FileMenu(this@ApplicationView, proj))
+			add(EditMenu(proj))
 			add(OpenRocketMenu(proj))
 			add(WindowMenu(this@ApplicationView, proj))
 			frame.jMenuBar = this
@@ -145,14 +149,20 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 			requestFocus()
 			state = JFrame.NORMAL
 		}
+		val historyListener = object : HistoryAdapter() {
+			override fun onStatus(sender: HistoryController, modified: Boolean) = updateTitle(modified, proj.file)
+		}.apply {
+			onStatus(proj.history, proj.history.fileModified)
+			proj.history.addListener(this)
+		}
 		proj.addListener(object : ProjectAdapter() {
 			override fun onStop(sender: ProjectController) {
 				frame.dispose()
 				proj.removeListener(this)
+				proj.history.removeListener(historyListener)
 			}
-			
-			override fun onStatus(sender: ProjectController, modified: Boolean) = updateTitle(modified, proj.file)
-			override fun onFileChange(sender: ProjectController, file: File?) = updateTitle(proj.modified, file)
+
+			override fun onFileChange(sender: ProjectController, file: File?) = updateTitle(proj.history.fileModified, file)
 		}.apply {
 			onFileChange(proj, proj.file)
 		})

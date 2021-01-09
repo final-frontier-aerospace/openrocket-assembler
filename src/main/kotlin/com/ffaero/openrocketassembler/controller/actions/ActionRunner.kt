@@ -5,12 +5,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
 class ActionRunner {
-	companion object {
-		val isRunner = object : ThreadLocal<Boolean>() {
-			override fun initialValue(): Boolean = false
-		}
-	}
-	
 	private val queue = ActionQueue()
 	private var run = true
 	private val lock = ReentrantLock()
@@ -18,7 +12,6 @@ class ActionRunner {
 	
 	private val thread = Thread(object : Runnable {
 		override fun run() {
-			isRunner.set(true)
 			lock.lock()
 			try {
 				while (true) {

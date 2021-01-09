@@ -3,6 +3,7 @@ package com.ffaero.openrocketassembler.controller
 import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.model.ComponentFile
+import com.ffaero.openrocketassembler.model.HistoryTransaction
 import com.ffaero.openrocketassembler.model.proto.Bug8188OuterClass.Bug8188
 import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.Configuration
 import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.ConfigurationOrBuilder
@@ -29,74 +30,122 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 	}
 	
 	private fun setFileOutlineAt(index: Int, file: ByteString) {
-		if (getFileOutlineAt(index) != file) {
-			proj.model.getConfigurationsBuilder(index).fileOutline = file
-			proj.modified = true
+		val old = getFileOutlineAt(index)
+		if (old != file) {
+			proj.history.perform(HistoryTransaction("Editing Assembly File").add {
+				proj.model.getConfigurationsBuilder(index).fileOutline = file
+			}.toUndo {
+				proj.model.getConfigurationsBuilder(index).fileOutline = old
+			})
 		}
 	}
 	
 	private val editing = ArrayList<Boolean>()
-	
-	fun add(name: String) {
-		proj.model.addConfigurations(Configuration.newBuilder().setName(name).build())
-		proj.modified = true
-		editing.add(false)
-		listener.onConfigurationAdded(this, proj.model.configurationsCount - 1, name, listOf())
-	}
-	
-	fun duplicate(dupIndex: Int, newName: String) {
-		val model = proj.model.getConfigurations(dupIndex).toBuilder().setName(newName).build()
-		proj.model.addConfigurations(dupIndex + 1, model)
-		proj.modified = true
-		editing.add(dupIndex + 1, false)
-		listener.onConfigurationAdded(this, dupIndex + 1, newName, componentsIn(model))
-	}
-	
-	fun remove(index: Int) {
+
+	private fun add(desc: String, index: Int, model: Configuration) = proj.history.perform(HistoryTransaction(desc).add {
+		proj.model.addConfigurations(index, model)
+		editing.add(index, false)
+		listener.onConfigurationAdded(this, index, model.name, listOf())
+	}.toUndo {
 		proj.model.removeConfigurations(index)
-		proj.modified = true
 		editing.removeAt(index)
 		listener.onConfigurationRemoved(this, index)
+	})
+	
+	fun add(name: String) = add("Adding Configuration", proj.model.configurationsCount, Configuration.newBuilder().setName(name).build())
+	fun duplicate(dupIndex: Int, newName: String) = add("Duplicating Configuration", dupIndex + 1, proj.model.getConfigurations(dupIndex).toBuilder().setName(newName).build())
+	
+	fun remove(index: Int) {
+		val config = proj.model.getConfigurations(index)
+		val isEditing = editing[index]
+		proj.history.perform(HistoryTransaction("Removing Configuration").add {
+			proj.model.removeConfigurations(index)
+			editing.removeAt(index)
+			listener.onConfigurationRemoved(this, index)
+		}.toUndo {
+			proj.model.addConfigurations(index, config)
+			editing.add(index, isEditing)
+			listener.onConfigurationAdded(this, index, config.name, componentsIn(config))
+		})
 	}
 	
 	fun move(fromIndex: Int, toIndex: Int) {
-		val tmp = proj.model.getConfigurations(fromIndex)
-		proj.model.removeConfigurations(fromIndex)
-		proj.model.addConfigurations(toIndex, tmp)
-		proj.modified = true
-		val tmpB = editing[fromIndex]
-		editing.removeAt(fromIndex)
-		editing.add(toIndex, tmpB)
-		listener.onConfigurationMoved(this, fromIndex, toIndex)
+		val config = proj.model.getConfigurations(fromIndex)
+		val isEditing = editing[fromIndex]
+		proj.history.perform(HistoryTransaction("Moving Configuration").add {
+			proj.model.removeConfigurations(fromIndex)
+			proj.model.addConfigurations(toIndex, config)
+			editing.removeAt(fromIndex)
+			editing.add(toIndex, isEditing)
+			listener.onConfigurationMoved(this, fromIndex, toIndex)
+		}.toUndo {
+			proj.model.removeConfigurations(toIndex)
+			proj.model.addConfigurations(fromIndex, config)
+			editing.removeAt(toIndex)
+			editing.add(fromIndex, isEditing)
+			listener.onConfigurationMoved(this, toIndex, fromIndex)
+		})
 	}
 	
 	fun rename(index: Int, name: String) {
-		proj.model.getConfigurationsBuilder(index).name = name
-		proj.modified = true
-		listener.onConfigurationRenamed(this, index, name)
+		val model = proj.model.getConfigurationsBuilder(index)
+		val oldName = model.name
+		proj.history.perform(HistoryTransaction("Renaming Configuration").add {
+			model.name = name
+			listener.onConfigurationRenamed(this, index, name)
+		}.toUndo {
+			model.name = oldName
+			listener.onConfigurationRenamed(this, index, oldName)
+		})
 	}
 	
 	fun addComponent(configIndex: Int, index: Int, component: File) {
 		if (component is ComponentFile) {
-			proj.model.getConfigurationsBuilder(configIndex).addComponents(index, Bug8188.newBuilder().setValue(component.id).build())
-			proj.modified = true
-			listener.onComponentAdded(this, configIndex, index, component)
+			val model = proj.model.getConfigurationsBuilder(configIndex)
+			val comp = Bug8188.newBuilder().setValue(component.id).build()
+			proj.history.perform(HistoryTransaction("Adding Component to Configuration").add {
+				model.addComponents(index, comp)
+				listener.onComponentAdded(this, configIndex, index, component)
+			}.toUndo {
+				model.removeComponents(index)
+				listener.onComponentRemoved(this, configIndex, index)
+			})
+		}
+	}
+
+	private fun removeComponent(configIndex: Int, index: Int, transact: HistoryTransaction) {
+		val model = proj.model.getConfigurationsBuilder(configIndex)
+		val comp = model.getComponents(index)
+		val file = proj.components.findComponent(comp.value)
+		if (file != null) {
+			transact.add {
+				model.removeComponents(index)
+				listener.onComponentRemoved(this, configIndex, index)
+			}.toUndo {
+				model.addComponents(index, comp)
+				listener.onComponentAdded(this, configIndex, index, file)
+			}
 		}
 	}
 	
 	fun removeComponent(configIndex: Int, index: Int) {
-		proj.model.getConfigurationsBuilder(configIndex).removeComponents(index)
-		proj.modified = true
-		listener.onComponentRemoved(this, configIndex, index)
+		val transact = HistoryTransaction("Removing Component from Configuration")
+		removeComponent(configIndex, index, transact)
+		proj.history.perform(transact)
 	}
 	
 	fun moveComponent(configIndex: Int, fromIndex: Int, toIndex: Int) {
-		val cfg = proj.model.getConfigurationsBuilder(configIndex)
-		val tmp = cfg.getComponents(fromIndex)
-		cfg.removeComponents(fromIndex)
-		cfg.addComponents(toIndex, tmp)
-		proj.modified = true
-		listener.onComponentMoved(this, configIndex, fromIndex, toIndex)
+		val model = proj.model.getConfigurationsBuilder(configIndex)
+		val comp = model.getComponents(fromIndex)
+		proj.history.perform(HistoryTransaction("Moving Component within Configuration").add {
+			model.removeComponents(fromIndex)
+			model.addComponents(toIndex, comp)
+			listener.onComponentMoved(this, configIndex, fromIndex, toIndex)
+		}.toUndo {
+			model.removeComponents(toIndex)
+			model.addComponents(fromIndex, comp)
+			listener.onComponentMoved(this, configIndex, toIndex, fromIndex)
+		})
 	}
 	
 	internal fun afterLoad() {
@@ -107,17 +156,28 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 		listener.onConfigurationsReset(this, names)
 	}
 	
-	internal fun componentFileUpdate(file: ComponentFile) {
+	internal fun componentFileUpdate(file: ComponentFile, oldFile: ComponentFile, transact: HistoryTransaction) {
+		val list = ArrayList<Pair<Int, Int>>()
 		proj.model.configurationsList.forEachIndexed { idx, it ->
 			componentsIn(it).forEachIndexed { idx2, it2 ->
 				if (it2.id == file.id) {
+					list.add(Pair(idx, idx2))
 					listener.onComponentChanged(this, idx, idx2, file)
 				}
 			}
 		}
+		transact.add {
+			list.forEach {
+				listener.onComponentChanged(this, it.first, it.second, file)
+			}
+		}.toUndo {
+			list.forEach {
+				listener.onComponentChanged(this, it.first, it.second, oldFile)
+			}
+		}
 	}
 	
-	internal fun componentFileDeleted(file: ComponentFile) {
+	internal fun componentFileDeleted(file: ComponentFile, transact: HistoryTransaction) {
 		val list = ArrayList<Pair<Int, Int>>()
 		proj.model.configurationsList.forEachIndexed { idx, it ->
 			it.componentsList.forEachIndexed { idx2, it2 ->
@@ -127,15 +187,14 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 			}
 		}
 		list.reversed().forEach {
-			removeComponent(it.first, it.second)
+			removeComponent(it.first, it.second, transact)
 		}
 	}
 	
 	fun isEditingAny() = editing.any { it }
-	private fun isEditing(configIndex: Int) = editing[configIndex]
 	
 	fun edit(configIndex: Int) {
-		if (isEditing(configIndex)) {
+		if (editing[configIndex]) {
 			return
 		}
 		editing[configIndex] = true
