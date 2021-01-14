@@ -115,7 +115,7 @@ class ComponentController(val proj: ProjectController) : DispatcherBase<Componen
 	}
 	
 	internal fun beforeSave(file: File, model: Project.Builder) {
-		val base = Paths.get(file.parentFile.absolutePath)
+		val base = Paths.get(file.absoluteFile.canonicalFile.parentFile.path)
 		model.clearComponents()
 		data.forEach {
 			model.addComponents(Component.newBuilder().setId(it.id).setFilename(base.relativize(Paths.get(it.path)).toString()).build())
