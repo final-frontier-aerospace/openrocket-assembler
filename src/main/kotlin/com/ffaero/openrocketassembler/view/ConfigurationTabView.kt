@@ -2,6 +2,7 @@ package com.ffaero.openrocketassembler.view
 
 import com.ffaero.openrocketassembler.controller.*
 import org.slf4j.LoggerFactory
+import java.awt.EventQueue
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import java.awt.event.MouseAdapter
@@ -25,72 +26,83 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 	
 	private val configListener = object : ConfigurationAdapter() {
 		override fun onConfigurationsReset(sender: ConfigurationController, names: List<String>) {
-			updating = true
-			while (tabCount > 1) {
-				removeTabAt(0)
+			EventQueue.invokeLater {
+				updating = true
+				while (tabCount > 1) {
+					removeTabAt(0)
+				}
+				names.forEachIndexed { idx, it ->
+					ConfigurationTabLabel(this@ConfigurationTabView, it).apply {
+						val view = view
+						if (view is RocketList) {
+							view.onReset(sender.componentsAt(idx))
+						} else {
+							log.warn("Invalid view: {}", view)
+						}
+						enableUnsafeUI = proj.app.settings.enableUnsafeUI
+						insert(this@ConfigurationTabView, idx)
+					}
+				}
+				selectedIndex = 0
+				updating = false
 			}
-			names.forEachIndexed { idx, it ->
-				ConfigurationTabLabel(this@ConfigurationTabView, it).apply {
+		}
+
+		override fun onConfigurationAdded(sender: ConfigurationController, index: Int, name: String, components: List<File>) {
+			EventQueue.invokeLater {
+				updating = true
+				ConfigurationTabLabel(this@ConfigurationTabView, name).apply {
 					val view = view
 					if (view is RocketList) {
-						view.onReset(sender.componentsAt(idx))
+						view.onReset(components)
 					} else {
 						log.warn("Invalid view: {}", view)
 					}
 					enableUnsafeUI = proj.app.settings.enableUnsafeUI
-					insert(this@ConfigurationTabView, idx)
+					insert(this@ConfigurationTabView, index)
 				}
+				selectedIndex = index
+				updating = false
 			}
-			selectedIndex = 0
-			updating = false
-		}
-
-		override fun onConfigurationAdded(sender: ConfigurationController, index: Int, name: String, components: List<File>) {
-			updating = true
-			ConfigurationTabLabel(this@ConfigurationTabView, name).apply {
-				val view = view
-				if (view is RocketList) {
-					view.onReset(components)
-				} else {
-					log.warn("Invalid view: {}", view)
-				}
-				enableUnsafeUI = proj.app.settings.enableUnsafeUI
-				insert(this@ConfigurationTabView, index)
-			}
-			selectedIndex = index
-			updating = false
 		}
 
 		override fun onConfigurationRemoved(sender: ConfigurationController, index: Int) {
-			updating = true
-			removeTabAt(index)
-			if (index == tabCount - 1 && index > 0) {
-				selectedIndex = index - 1
+			EventQueue.invokeLater {
+				updating = true
+				removeTabAt(index)
+				if (index == tabCount - 1 && index > 0) {
+					selectedIndex = index - 1
+				}
+				updating = false
 			}
-			updating = false
 		}
 
 		override fun onConfigurationMoved(sender: ConfigurationController, fromIndex: Int, toIndex: Int) {
-			updating = true
-			val comp = getTabComponentAt(fromIndex)
-			if (comp !is ConfigurationTabLabelBase) {
-				log.warn("Invalid tab component: {}", comp)
-				return
+			EventQueue.invokeLater {
+				updating = true
+				val comp = getTabComponentAt(fromIndex)
+				if (comp !is ConfigurationTabLabelBase) {
+					log.warn("Invalid tab component: {}", comp)
+					return@invokeLater
+				}
+				removeTabAt(fromIndex)
+				comp.insert(this@ConfigurationTabView, toIndex)
+				selectedIndex = toIndex
+				updating = false
 			}
-			removeTabAt(fromIndex)
-			comp.insert(this@ConfigurationTabView, toIndex)
-			selectedIndex = toIndex
-			updating = false
 		}
 
 		override fun onConfigurationRenamed(sender: ConfigurationController, index: Int, name: String) {
-			val comp = getTabComponentAt(index)
-			if (comp !is ConfigurationTabLabelBase) {
-				log.warn("Invalid tab component: {}", comp)
-				return
+			EventQueue.invokeLater {
+				val comp = getTabComponentAt(index)
+				if (comp !is ConfigurationTabLabelBase) {
+					log.warn("Invalid tab component: {}", comp)
+					return@invokeLater
+				}
+				comp.text = name
 			}
-			comp.text = name
 		}
+
 		override fun onComponentAdded(sender: ConfigurationController, configIndex: Int, index: Int, component: File) {
 			val comp = getComponentAt(configIndex)
 			if (comp !is RocketList) {
@@ -130,10 +142,12 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 
 	private val settingsListener = object : SettingAdapter() {
 		override fun onSettingsUpdated(sender: SettingController) {
-			for (i in 0 until tabCount) {
-				val comp = getTabComponentAt(i)
-				if (comp is ConfigurationTabLabelBase) {
-					comp.enableUnsafeUI = sender.enableUnsafeUI
+			EventQueue.invokeLater {
+				for (i in 0 until tabCount) {
+					val comp = getTabComponentAt(i)
+					if (comp is ConfigurationTabLabelBase) {
+						comp.enableUnsafeUI = sender.enableUnsafeUI
+					}
 				}
 			}
 		}

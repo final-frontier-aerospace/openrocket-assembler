@@ -2,6 +2,7 @@ package com.ffaero.openrocketassembler.view.menu
 
 import com.ffaero.openrocketassembler.controller.*
 import com.ffaero.openrocketassembler.view.ListenerLifecycleManager
+import java.awt.EventQueue
 import java.awt.event.ActionListener
 import javax.swing.JMenu
 import javax.swing.JMenuItem
@@ -27,21 +28,25 @@ class OpenRocketMenu(private val proj: ProjectController) : JMenu("OpenRocket") 
 			}
 			openRocketListener = object : OpenRocketAdapter() {
 				override fun onOpenRocketVersionsUpdated(sender: OpenRocketController, versions: List<String>) {
-					removeAll()
-					versions.forEach {
-						add(JRadioButtonMenuItem(it).apply {
-							actionCommand = it
-							isSelected = it == proj.openRocketVersion
-							addActionListener(setListener)
-							list.add(this)
-						})
+					EventQueue.invokeLater {
+						removeAll()
+						versions.forEach {
+							add(JRadioButtonMenuItem(it).apply {
+								actionCommand = it
+								isSelected = it == proj.openRocketVersion
+								addActionListener(setListener)
+								list.add(this)
+							})
+						}
 					}
 				}
 			}
 			projectListener = object : ProjectAdapter() {
 				override fun onOpenRocketVersionChange(sender: ProjectController, version: String) {
-					list.forEach {
-						it.isSelected = it.actionCommand == version
+					EventQueue.invokeLater {
+						list.forEach {
+							it.isSelected = it.actionCommand == version
+						}
 					}
 				}
 			}

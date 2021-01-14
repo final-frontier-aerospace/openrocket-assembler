@@ -31,20 +31,18 @@ class ActionRunner {
 						cond.await(diff, TimeUnit.MILLISECONDS)
 					}
 					if (!run) {
-						return
+						break
 					}
 					queue.remove(task!!)
 					lock.unlock()
 					try {
 						task!!.run()
 					} catch (ex: Exception) {
-						log.error("Task encountered exception", ex)
+						Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), ex)
 					} finally {
 						lock.lock()
 					}
 				}
-			} catch (ex: Exception) {
-				log.error("ActionRunner thread encountered exception", ex)
 			} finally {
 				lock.unlock()
 			}

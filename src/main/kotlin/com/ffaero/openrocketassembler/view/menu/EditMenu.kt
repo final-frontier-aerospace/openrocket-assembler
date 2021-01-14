@@ -4,6 +4,7 @@ import com.ffaero.openrocketassembler.controller.HistoryAdapter
 import com.ffaero.openrocketassembler.controller.HistoryController
 import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.view.ListenerLifecycleManager
+import java.awt.EventQueue
 import java.awt.event.KeyEvent
 import javax.swing.JMenu
 import javax.swing.JMenuItem
@@ -12,10 +13,12 @@ import javax.swing.KeyStroke
 class EditMenu(private val proj: ProjectController) : JMenu("Edit") {
     private val historyListener = object : HistoryAdapter() {
         override fun onHistoryUpdate(sender: HistoryController, undoAction: String?, redoAction: String?) {
-            undo.isEnabled = undoAction != null
-            undo.text = "Undo " + (undoAction ?: "")
-            redo.isEnabled = redoAction != null
-            redo.text = "Redo " + (redoAction ?: "")
+            EventQueue.invokeLater {
+                undo.isEnabled = undoAction != null
+                undo.text = "Undo " + (undoAction ?: "")
+                redo.isEnabled = redoAction != null
+                redo.text = "Redo " + (redoAction ?: "")
+            }
         }
     }
 

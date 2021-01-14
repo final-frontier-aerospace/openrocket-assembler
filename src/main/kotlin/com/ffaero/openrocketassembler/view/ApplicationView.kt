@@ -4,6 +4,7 @@ import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.controller.*
 import com.ffaero.openrocketassembler.view.menu.*
 import org.slf4j.LoggerFactory
+import java.awt.EventQueue
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.File
@@ -140,30 +141,36 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 			log.info("Window opened")
 		}
 		val historyListener = object : HistoryAdapter() {
-			override fun onStatus(sender: HistoryController, modified: Boolean) = updateTitle(modified, proj.file)
+			override fun onStatus(sender: HistoryController, modified: Boolean) = EventQueue.invokeLater { updateTitle(modified, proj.file) }
 		}.apply {
 			onStatus(proj.history, proj.history.fileModified)
 			proj.history.addListener(this)
 		}
 		val settingListener = object : SettingAdapter() {
 			override fun onSettingsUpdated(sender: SettingController) {
-				frame.preferredSize = sender.initialSize
-				fileChooser.currentDirectory = sender.initialDir
+				EventQueue.invokeLater {
+					frame.preferredSize = sender.initialSize
+					fileChooser.currentDirectory = sender.initialDir
+				}
 			}
 		}.apply {
 			onSettingsUpdated(proj.app.settings)
-			frame.size = frame.preferredSize
+			EventQueue.invokeLater {
+				frame.size = frame.preferredSize
+			}
 			proj.app.settings.addListener(this)
 		}
 		proj.addListener(object : ProjectAdapter() {
 			override fun onStop(sender: ProjectController) {
-				frame.dispose()
+				EventQueue.invokeLater {
+					frame.dispose()
+				}
 				proj.removeListener(this)
 				proj.history.removeListener(historyListener)
 				proj.app.settings.removeListener(settingListener)
 			}
 
-			override fun onFileChange(sender: ProjectController, file: File?) = updateTitle(proj.history.fileModified, file)
+			override fun onFileChange(sender: ProjectController, file: File?) = EventQueue.invokeLater { updateTitle(proj.history.fileModified, file) }
 		}.apply {
 			onFileChange(proj, proj.file)
 		})

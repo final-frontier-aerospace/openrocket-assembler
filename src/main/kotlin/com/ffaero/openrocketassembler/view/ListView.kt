@@ -1,6 +1,7 @@
 package com.ffaero.openrocketassembler.view
 
 import java.awt.Component
+import java.awt.EventQueue
 import javax.swing.JPanel
 
 abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
@@ -37,7 +38,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 	
 	internal val items = ArrayList<TItem>()
 	
-	protected fun doReset(vals: List<TValue>) {
+	protected fun doReset(vals: List<TValue>) = EventQueue.invokeLater {
 		items.forEach {
 			remove(it)
 		}
@@ -53,7 +54,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 		repaint()
 	}
 	
-	protected fun doAdd(index: Int, v: TValue) {
+	protected fun doAdd(index: Int, v: TValue) = EventQueue.invokeLater {
 		items.add(index, create().apply {
 			this.index = index
 			set(this, v)
@@ -66,7 +67,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 		repaint()
 	}
 	
-	protected fun doRemove(index: Int) {
+	protected fun doRemove(index: Int) = EventQueue.invokeLater {
 		remove(items[index])
 		items.removeAt(index)
 		items.subList(index, items.size).forEach {
@@ -76,7 +77,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 		repaint()
 	}
 	
-	protected fun doMove(fromIndex: Int, toIndex: Int) {
+	protected fun doMove(fromIndex: Int, toIndex: Int) = EventQueue.invokeLater {
 		val tmp = items[fromIndex]
 		items.removeAt(fromIndex)
 		tmp.index = toIndex
@@ -94,7 +95,7 @@ abstract class ListView<TItem : ListViewItem, TValue> : JPanel() {
 		repaint()
 	}
 	
-	protected fun doChange(index: Int, v: TValue) {
+	protected fun doChange(index: Int, v: TValue) = EventQueue.invokeLater {
 		set(items[index], v)
 	}
 	

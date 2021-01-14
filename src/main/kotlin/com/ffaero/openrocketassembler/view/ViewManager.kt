@@ -2,6 +2,7 @@ package com.ffaero.openrocketassembler.view
 
 import com.ffaero.openrocketassembler.controller.*
 import org.slf4j.LoggerFactory
+import java.awt.EventQueue
 import java.io.Closeable
 import javax.swing.UIManager
 
@@ -14,7 +15,7 @@ class ViewManager(private val app: ApplicationController) {
 	private val dialogs = HashSet<Closeable>()
 
 	private val appListener = object : ApplicationAdapter() {
-		override fun onProjectAdded(sender: ApplicationController, project: ProjectController) {
+		override fun onProjectAdded(sender: ApplicationController, project: ProjectController) = EventQueue.invokeLater {
 			log.info("Project added to view")
 			views[project] = ApplicationView(this@ViewManager, project)
 		}
@@ -29,7 +30,7 @@ class ViewManager(private val app: ApplicationController) {
 	}
 
 	private val settingsListener = object : SettingAdapter() {
-		override fun onSettingsUpdated(sender: SettingController) {
+		override fun onSettingsUpdated(sender: SettingController) = EventQueue.invokeLater {
 			UIManager.setLookAndFeel(sender.lookAndFeel)
 		}
 	}.apply {

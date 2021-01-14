@@ -5,6 +5,7 @@ import com.ffaero.openrocketassembler.controller.SettingController
 import com.ffaero.openrocketassembler.model.TimeSpan
 import org.slf4j.LoggerFactory
 import java.awt.BorderLayout
+import java.awt.EventQueue
 import java.awt.Font
 import java.awt.event.KeyEvent
 import java.awt.event.WindowAdapter
@@ -419,7 +420,7 @@ class SettingsWindow(private val view: ViewManager, private val settings: Settin
     }
 
     private val settingListener = object : SettingAdapter() {
-        override fun onSettingsUpdated(sender: SettingController) {
+        override fun onSettingsUpdated(sender: SettingController) = EventQueue.invokeLater {
             historyBox.value = sender.historyLength
             initialHeightBox.value = sender.initialHeight
             initialWidthBox.value = sender.initialWidth

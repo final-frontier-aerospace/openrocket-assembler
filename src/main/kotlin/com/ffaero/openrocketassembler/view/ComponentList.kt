@@ -77,7 +77,7 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 	}
 
 	private val settingsListener = object : SettingAdapter() {
-		override fun onSettingsUpdated(sender: SettingController) {
+		override fun onSettingsUpdated(sender: SettingController) = EventQueue.invokeLater {
 			fileChooser.currentDirectory = sender.initialDir
 		}
 	}
