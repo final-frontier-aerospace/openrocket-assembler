@@ -27,6 +27,8 @@ abstract class ListenerListBase<TListener> {
 	fun add(e: TListener) = cow().add(e)
 	
 	fun remove(e: TListener) = cow().remove(e)
+
+	fun isNotEmpty() = set.isNotEmpty()
 	
 	fun forEach(action: Consumer<TListener>) {
 		lock.lock()

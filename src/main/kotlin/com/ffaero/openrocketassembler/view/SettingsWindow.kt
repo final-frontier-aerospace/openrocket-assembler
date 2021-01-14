@@ -47,6 +47,7 @@ class SettingsWindow(private val view: ViewManager, private val settings: Settin
     private val initialDirBox: JTextField
     private val cacheDirBox: JTextField
     private val tempDirBox: JTextField
+    private val keepLogFilesBox: JCheckBox
     private val lookAndFeelBox: JComboBox<String>
     private val javaPathBox: JTextField
     private val enableUnsafeUIBox: JCheckBox
@@ -231,11 +232,19 @@ class SettingsWindow(private val view: ViewManager, private val settings: Settin
                 layout.putConstraint(EAST, tempDirLabel, 0, EAST, cacheDirLabel)
                 layout.putConstraint(WEST, tempDirLabel, 0, WEST, cacheDirLabel)
 
+                keepLogFilesBox = JCheckBox("Keep log files").apply {
+                    toolTipText = "Store log files in temporary directory"
+                }
+                add(keepLogFilesBox)
+                layout.putConstraint(NORTH, keepLogFilesBox, 5, SOUTH, tempDirEmpty)
+                layout.putConstraint(EAST, keepLogFilesBox, -5, EAST, this)
+                layout.putConstraint(WEST, keepLogFilesBox, 5, WEST, this)
+
                 val javaLabel = JLabel("Java Settings").apply {
                     font = catFont
                 }
                 add(javaLabel)
-                layout.putConstraint(NORTH, javaLabel, 10, SOUTH, tempDirEmpty)
+                layout.putConstraint(NORTH, javaLabel, 10, SOUTH, keepLogFilesBox)
                 layout.putConstraint(EAST, javaLabel, -5, EAST, this)
                 layout.putConstraint(WEST, javaLabel, 5, WEST, this)
 
@@ -419,6 +428,7 @@ class SettingsWindow(private val view: ViewManager, private val settings: Settin
             initialDirBox.text = sender.initialDir.absolutePath
             cacheDirBox.text = sender.cacheDir.absolutePath
             tempDirBox.text = sender.tempDir.absolutePath
+            keepLogFilesBox.isSelected = sender.keepLogFiles
             lookAndFeelBox.selectedItem = sender.lookAndFeel
             javaPathBox.text = sender.javaPath
             enableUnsafeUIBox.isSelected = sender.enableUnsafeUI
@@ -447,6 +457,7 @@ class SettingsWindow(private val view: ViewManager, private val settings: Settin
         settings.initialDir = File(initialDirBox.text)
         settings.cacheDir = File(cacheDirBox.text)
         settings.tempDir = File(tempDirBox.text)
+        settings.keepLogFiles = keepLogFilesBox.isSelected
         settings.lookAndFeel = lookAndFeelBox.selectedItem as String
         settings.javaPath = javaPathBox.text
         settings.enableUnsafeUI = enableUnsafeUIBox.isSelected
@@ -471,9 +482,9 @@ class SettingsWindow(private val view: ViewManager, private val settings: Settin
             (editor.textField.formatter as? DefaultFormatter)?.commitsOnValidEdit = true
             it.addChangeListener { modified = true }
         }
-        arrayOf(openFromCWDBox, enableUnsafeUIBox, warnDifferentVersionBox, warnFileExistsBox,
-                warnTemplateOpenBox, warnConfigOpenBox, warnUnsavedChangesBox, warnInvalidReferenceBox,
-                warnRelocateBox).forEach {
+        arrayOf(openFromCWDBox, keepLogFilesBox, enableUnsafeUIBox, warnDifferentVersionBox,
+                warnFileExistsBox, warnTemplateOpenBox, warnConfigOpenBox, warnUnsavedChangesBox,
+                warnInvalidReferenceBox, warnRelocateBox).forEach {
             it.addItemListener { modified = true }
         }
         arrayOf(openrocketUpdateBox, lookAndFeelBox).forEach {

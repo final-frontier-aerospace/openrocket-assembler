@@ -50,6 +50,7 @@ class SettingController(val app: ApplicationController) : DispatcherBase<Setting
         private val initialDirDesc = desc.findFieldByNumber(Settings.INITIALDIR_FIELD_NUMBER)
         private val cacheDirDesc = desc.findFieldByNumber(Settings.CACHEDIR_FIELD_NUMBER)
         private val tempDirDesc = desc.findFieldByNumber(Settings.TEMPDIR_FIELD_NUMBER)
+        //keepLogFiles
         // Java Settings
         private val lookAndFeelDesc = desc.findFieldByNumber(Settings.LOOKANDFEEL_FIELD_NUMBER)
         private val javaPathDesc = desc.findFieldByNumber(Settings.JAVAPATH_FIELD_NUMBER)
@@ -82,6 +83,7 @@ class SettingController(val app: ApplicationController) : DispatcherBase<Setting
                 log.info("Initial dir: {}", initialDir.absolutePath)
                 log.info("Cache dir: {}", cacheDir.absolutePath)
                 log.info("Temp dir: {}", tempDir.absolutePath)
+                log.info("Keep log files: {}", keepLogFiles)
                 log.info("Look and feel: {}", lookAndFeel)
                 log.info("Java path: {}", javaPath)
                 log.info("Enable unsafe UI: {}", enableUnsafeUI)
@@ -106,6 +108,7 @@ class SettingController(val app: ApplicationController) : DispatcherBase<Setting
             FileOutputStream(settingsFile).use {
                 model.build().writeTo(it)
             }
+            log.info("Settings saved")
         } catch (ex: IOException) {
             log.error("Error saving settings file", ex)
         }
@@ -202,6 +205,13 @@ class SettingController(val app: ApplicationController) : DispatcherBase<Setting
             set(value) {
                 if (tempDir.absolutePath != value.absolutePath) {
                     model.tempDir = value.absolutePath
+                }
+            }
+    var keepLogFiles: Boolean
+            get() = !model.keepLogFiles
+            set(value) {
+                if (keepLogFiles != value) {
+                    model.keepLogFiles = !value
                 }
             }
     // Java Settings

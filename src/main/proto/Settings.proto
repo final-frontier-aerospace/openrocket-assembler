@@ -12,6 +12,7 @@ message Settings {
     string initialDir = 6;
     string cacheDir = 7;
     string tempDir = 8;
+    bool keepLogFiles = 20;
     // Java Settings
     string lookAndFeel = 9;
     string javaPath = 10;

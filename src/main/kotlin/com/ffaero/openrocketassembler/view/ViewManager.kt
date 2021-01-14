@@ -1,19 +1,26 @@
 package com.ffaero.openrocketassembler.view
 
 import com.ffaero.openrocketassembler.controller.*
+import org.slf4j.LoggerFactory
 import java.io.Closeable
 import javax.swing.UIManager
 
 class ViewManager(private val app: ApplicationController) {
+	companion object {
+		private val log = LoggerFactory.getLogger(ViewManager::class.java)
+	}
+
 	private val views = HashMap<ProjectController, ApplicationView>()
 	private val dialogs = HashSet<Closeable>()
 
 	private val appListener = object : ApplicationAdapter() {
 		override fun onProjectAdded(sender: ApplicationController, project: ProjectController) {
+			log.info("Project added to view")
 			views[project] = ApplicationView(this@ViewManager, project)
 		}
 
 		override fun onProjectRemoved(sender: ApplicationController, project: ProjectController) {
+			log.info("Project removed from view")
 			views.remove(project)
 			possiblyClose()
 		}
@@ -48,5 +55,9 @@ class ViewManager(private val app: ApplicationController) {
 			app.removeListener(appListener)
 			app.settings.removeListener(settingsListener)
 		}
+	}
+
+	init {
+		log.info("View initialized")
 	}
 }

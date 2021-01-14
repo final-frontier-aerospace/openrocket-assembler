@@ -14,8 +14,14 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 		private val log = LoggerFactory.getLogger(ApplicationController::class.java)
 	}
 
+	val logControl = LogController(this)
+
 	val settings = SettingController(this).apply {
 		load()
+	}
+
+	init {
+		logControl.initSettings()
 	}
 
 	private val cacheFile
@@ -66,7 +72,7 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 			get() = projects.mapNotNull { openrocket.jarForVersion(it.openRocketVersion) }.toSet()
 
 	val tempInUse: Set<File>
-			get() = projects.flatMap { it.tempInUse }.toSet()
+			get() = projects.flatMap { it.tempInUse }.plus(logControl.file).filterNotNull().toSet()
 
 	private val settingListener = object : SettingAdapter() {
 		override fun onSettingsUpdated(sender: SettingController) {
@@ -87,6 +93,7 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 		if (writeCacheOnExit) {
 			writeCache()
 		}
+		logControl.stop()
 	}
 	
 	fun addProject(model: Project.Builder, file: File?) {
