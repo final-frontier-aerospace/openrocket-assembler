@@ -1,6 +1,5 @@
 package com.ffaero.openrocketassembler.controller.actions
 
-import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.controller.ProjectAdapter
 import com.ffaero.openrocketassembler.controller.ProjectController
 import org.apache.commons.io.IOUtils
@@ -17,12 +16,12 @@ class OpenRocketDownloader : ActionBase<ProjectController>() {
 	override fun runAction(controller: ProjectController) {
 		val ver = controller.app.openrocket.lookupVersion(controller.openRocketVersion)
 		if (ver != null) {
-			val file = FileSystem.getCacheFile(ver.getFilename())
+			val file = File(controller.app.settings.cacheDir, ver.filename)
 			if (!file.exists()) {
 				ActionReport(controller.app, "Downloading " + ver.name + "...").use {
 					val tmpFile = File(file.parentFile, "~" + file.name)
 					try {
-						URL(ver.getDownloadURL()).openStream().use { i ->
+						URL(ver.downloadURL).openStream().use { i ->
 							FileOutputStream(tmpFile).use { o ->
 								IOUtils.copy(i, o)
 							}

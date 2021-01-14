@@ -1,6 +1,5 @@
 package com.ffaero.openrocketassembler.controller
 
-import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.controller.actions.ActionFactory
 import com.ffaero.openrocketassembler.model.proto.CacheOuterClass.Cache
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
@@ -10,7 +9,13 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 class ApplicationController : DispatcherBase<ApplicationListener, ApplicationListenerList>(ApplicationListenerList()) {
-	private val cacheFile = FileSystem.getCacheFile("appcache.bin")
+	val settings = SettingController(this).apply {
+		load()
+	}
+
+	private val cacheFile
+		get() = File(settings.cacheDir, "appcache.bin")
+
 	internal val cache = Cache.newBuilder().apply {
 		if (cacheFile.exists()) {
 			try {
@@ -43,21 +48,45 @@ class ApplicationController : DispatcherBase<ApplicationListener, ApplicationLis
 			}
 	
 	val openrocket = OpenRocketController(this)
+
+	private val projects = HashSet<ProjectController>()
+
+	val cacheInUse: Set<File>
+			get() = projects.mapNotNull { openrocket.jarForVersion(it.openRocketVersion) }.toSet()
+
+	val tempInUse: Set<File>
+			get() = projects.flatMap { it.tempInUse }.toSet()
+
+	private val settingListener = object : SettingAdapter() {
+		override fun onSettingsUpdated(sender: SettingController) {
+			writeCacheOnExit = true
+		}
+	}
 	
 	init {
 		actions.addListeners(actions.applicationActions, this)
+		settings.addListener(settingListener)
 	}
 	
 	fun stop() {
 		actions.removeListeners(actions.applicationActions, this)
+		settings.removeListener(settingListener)
 		actions.stop()
 		if (writeCacheOnExit) {
 			writeCache()
 		}
 	}
 	
-	fun addProject(model: Project.Builder, file: File?) = listener.onProjectAdded(this, ProjectController(this, model, file))
-	internal fun removeProject(proj: ProjectController) = listener.onProjectRemoved(this, proj)
+	fun addProject(model: Project.Builder, file: File?) {
+		val proj = ProjectController(this, model, file)
+		projects.add(proj)
+		listener.onProjectAdded(this, proj)
+	}
+
+	internal fun removeProject(proj: ProjectController) {
+		projects.remove(proj)
+		listener.onProjectRemoved(this, proj)
+	}
 	
 	fun writeCache() {
 		try {

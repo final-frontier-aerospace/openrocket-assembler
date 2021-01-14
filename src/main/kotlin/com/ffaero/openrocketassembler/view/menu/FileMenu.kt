@@ -3,6 +3,7 @@ package com.ffaero.openrocketassembler.view.menu
 import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.view.ApplicationView
+import com.ffaero.openrocketassembler.view.SettingsWindow
 import com.google.protobuf.InvalidProtocolBufferException
 import java.awt.event.KeyEvent
 import java.io.FileNotFoundException
@@ -31,13 +32,15 @@ class FileMenu(private val view: ApplicationView, private val proj: ProjectContr
 							try {
 								proj.load(file)
 								proj.file = file
-								if (proj.lastSavedVersion < FileFormat.version) {
-									if (JOptionPane.showConfirmDialog(parent, "Project was saved in an older version of OpenRocket Assembler.  Open anyways?", "Open", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
-										proj.reset()
-									}
-								} else if (proj.lastSavedVersion > FileFormat.version) {
-									if (JOptionPane.showConfirmDialog(parent, "Project was saved in a newer version of OpenRocket Assembler.  Open anyways?", "Open", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
-										proj.reset()
+								if (proj.app.settings.warnDifferentVersion) {
+									if (proj.lastSavedVersion < FileFormat.version) {
+										if (JOptionPane.showConfirmDialog(parent, "Project was saved in an older version of OpenRocket Assembler.  Open anyways?", "Open", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+											proj.reset()
+										}
+									} else if (proj.lastSavedVersion > FileFormat.version) {
+										if (JOptionPane.showConfirmDialog(parent, "Project was saved in a newer version of OpenRocket Assembler.  Open anyways?", "Open", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+											proj.reset()
+										}
 									}
 								}
 							} catch (ex: FileNotFoundException) {
@@ -64,7 +67,13 @@ class FileMenu(private val view: ApplicationView, private val proj: ProjectContr
 			accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK)
 			addActionListener { view.saveProject(null, "Save As") }
 			this@FileMenu.add(this)
-			this@FileMenu.addSeparator()
+		}
+
+		addSeparator()
+
+		JMenuItem("Settings").apply {
+			addActionListener { SettingsWindow(view.view, proj.app.settings) }
+			this@FileMenu.add(this)
 		}
 
 		JMenuItem("Exit").apply {

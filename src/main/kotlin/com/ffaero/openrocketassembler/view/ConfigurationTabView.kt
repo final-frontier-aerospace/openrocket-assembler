@@ -1,8 +1,6 @@
 package com.ffaero.openrocketassembler.view
 
-import com.ffaero.openrocketassembler.controller.ConfigurationAdapter
-import com.ffaero.openrocketassembler.controller.ConfigurationController
-import com.ffaero.openrocketassembler.controller.ProjectController
+import com.ffaero.openrocketassembler.controller.*
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import java.awt.event.MouseAdapter
@@ -32,6 +30,7 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 					if (view is RocketList) {
 						view.onReset(sender.componentsAt(idx))
 					}
+					enableUnsafeUI = proj.app.settings.enableUnsafeUI
 					insert(this@ConfigurationTabView, idx)
 				}
 			}
@@ -46,6 +45,7 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 				if (view is RocketList) {
 					view.onReset(components)
 				}
+				enableUnsafeUI = proj.app.settings.enableUnsafeUI
 				insert(this@ConfigurationTabView, index)
 			}
 			selectedIndex = index
@@ -110,6 +110,17 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 				return
 			}
 			comp.onChange(index, component)
+		}
+	}
+
+	private val settingsListener = object : SettingAdapter() {
+		override fun onSettingsUpdated(sender: SettingController) {
+			for (i in 0 until tabCount) {
+				val comp = getTabComponentAt(i)
+				if (comp is ConfigurationTabLabelBase) {
+					comp.enableUnsafeUI = sender.enableUnsafeUI
+				}
+			}
 		}
 	}
 	
@@ -332,10 +343,13 @@ class ConfigurationTabView(internal val proj: ProjectController) : JTabbedPane()
 			override fun addListeners() {
 				configListener.onConfigurationsReset(proj.configurations, proj.configurations.names)
 				proj.configurations.addListener(configListener)
+				settingsListener.onSettingsUpdated(proj.app.settings)
+				proj.app.settings.addListener(settingsListener)
 			}
 
 			override fun removeListeners() {
 				proj.configurations.removeListener(configListener)
+				proj.app.settings.removeListener(settingsListener)
 			}
 		})
 	}

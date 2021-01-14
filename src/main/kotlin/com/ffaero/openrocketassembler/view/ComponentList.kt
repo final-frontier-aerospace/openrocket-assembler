@@ -2,6 +2,8 @@ package com.ffaero.openrocketassembler.view
 
 import com.ffaero.openrocketassembler.controller.ComponentAdapter
 import com.ffaero.openrocketassembler.controller.ComponentController
+import com.ffaero.openrocketassembler.controller.SettingAdapter
+import com.ffaero.openrocketassembler.controller.SettingController
 import com.ffaero.openrocketassembler.model.TemplateFile
 import java.awt.EventQueue
 import java.awt.event.ActionEvent
@@ -21,36 +23,38 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 	private val compListener = object : ComponentAdapter() {
 		override fun onComponentsReset(sender: ComponentController, components: List<File>) {
 			doReset(components)
-			EventQueue.invokeLater {
-				components.forEachIndexed { idx, it ->
-					if (!it.exists()) {
-						var message = "File referenced in project was not found:\n" + it.path
-						var type = JOptionPane.QUESTION_MESSAGE
-						var fixed = false
-						while (!fixed) {
-							when (JOptionPane.showOptionDialog(this@ComponentList, message, "Open", JOptionPane.DEFAULT_OPTION, type, null, arrayOf("Close Project", "Ignore", "Browse for File"), null)) {
-								0 -> { // Close project
-									view.app.closeThen("Open", "closing project") {
-										comp.proj.reset()
-										fixed = true
+			if (comp.proj.app.settings.warnInvalidReference) {
+				EventQueue.invokeLater {
+					components.forEachIndexed { idx, it ->
+						if (!it.exists()) {
+							var message = "File referenced in project was not found:\n" + it.path
+							var type = JOptionPane.QUESTION_MESSAGE
+							var fixed = false
+							while (!fixed) {
+								when (JOptionPane.showOptionDialog(this@ComponentList, message, "Open", JOptionPane.DEFAULT_OPTION, type, null, arrayOf("Close Project", "Ignore", "Browse for File"), null)) {
+									0 -> { // Close project
+										view.app.closeThen("Open", "closing project") {
+											comp.proj.reset()
+											fixed = true
+										}
 									}
-								}
-								2 -> { // Browse for File
-									if (fileChooser.showOpenDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
-										val file = fileChooser.selectedFile
-										if (file != null && file.exists()) {
-											if (comp.components.any { file.absolutePath == it.absolutePath }) {
-												message = "File is already in project:\n" + file.path
-												type = JOptionPane.ERROR_MESSAGE
-											} else {
-												comp.change(idx, file)
-												fixed = true
+									2 -> { // Browse for File
+										if (fileChooser.showOpenDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
+											val file = fileChooser.selectedFile
+											if (file != null && file.exists()) {
+												if (comp.components.any { file.absolutePath == it.absolutePath }) {
+													message = "File is already in project:\n" + file.path
+													type = JOptionPane.ERROR_MESSAGE
+												} else {
+													comp.change(idx, file)
+													fixed = true
+												}
 											}
 										}
 									}
-								}
-								else -> { // Ignore
-									fixed = true
+									else -> { // Ignore
+										fixed = true
+									}
 								}
 							}
 						}
@@ -64,9 +68,14 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 		override fun onComponentMoved(sender: ComponentController, fromIndex: Int, toIndex: Int) = doMove(fromIndex, toIndex)
 		override fun onComponentChanged(sender: ComponentController, index: Int, file: File) = doChange(index, file)
 	}
+
+	private val settingsListener = object : SettingAdapter() {
+		override fun onSettingsUpdated(sender: SettingController) {
+			fileChooser.currentDirectory = sender.initialDir
+		}
+	}
 	
 	private val fileChooser = JFileChooser().apply {
-		currentDirectory = File(".")
 		fileFilter = FileNameExtensionFilter("OpenRocket File (*.ork)", "ork")
 	}
 	
@@ -103,7 +112,7 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 								JOptionPane.showMessageDialog(this@ComponentList, "File is already in project:\n" + file.path, "New", JOptionPane.ERROR_MESSAGE)
 								return
 							}
-							if (file.exists()) {
+							if (file.exists() && comp.proj.app.settings.warnFileExists) {
 								if (JOptionPane.showConfirmDialog(this@ComponentList, "File already exists.  Overwrite?", "New", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
 									return
 								}
@@ -153,15 +162,18 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 			addActionListener { e ->
 				val item = getItem(e)
 				if (item != null) {
-					if (JOptionPane.showConfirmDialog(this@ComponentList, "Are you sure you want to relocate this component?\nThis involves selecting a different file to replace all instances of this component in the project with.", "Relocate", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-						if (fileChooser.showOpenDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
-							val file = fileChooser.selectedFile
-							if (file != null && file.exists()) {
-								if (comp.components.any { file.absolutePath == it.absolutePath }) {
-									JOptionPane.showMessageDialog(this@ComponentList, "File is already in project:\n" + file.path, "Relocate", JOptionPane.ERROR_MESSAGE)
-								} else {
-									comp.change(item.index, file)
-								}
+					if (comp.proj.app.settings.warnRelocate) {
+						if (JOptionPane.showConfirmDialog(this@ComponentList, "Are you sure you want to relocate this component?\nThis involves selecting a different file to replace all instances of this component in the project with.", "Relocate", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+							return@addActionListener
+						}
+					}
+					if (fileChooser.showOpenDialog(this@ComponentList) == JFileChooser.APPROVE_OPTION) {
+						val file = fileChooser.selectedFile
+						if (file != null && file.exists()) {
+							if (comp.components.any { file.absolutePath == it.absolutePath }) {
+								JOptionPane.showMessageDialog(this@ComponentList, "File is already in project:\n" + file.path, "Relocate", JOptionPane.ERROR_MESSAGE)
+							} else {
+								comp.change(item.index, file)
 							}
 						}
 					}
@@ -283,10 +295,13 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 			override fun addListeners() {
 				compListener.onComponentsReset(comp, comp.components)
 				comp.addListener(compListener)
+				settingsListener.onSettingsUpdated(comp.proj.app.settings)
+				comp.proj.app.settings.addListener(settingsListener)
 			}
 			
 			override fun removeListeners() {
 				comp.removeListener(compListener)
+				comp.proj.app.settings.removeListener(settingsListener)
 			}
 		})
 		addMouseListener(mouseListener)

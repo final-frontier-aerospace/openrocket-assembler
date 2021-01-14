@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
 		} catch (ex: IOException) {
 		}
 	}
-	if (!opened) {
+	if (!opened && controller.settings.openFromCWD) {
 		val files = File(".").listFiles { pathname -> pathname.extension == FileFormat.extension }
 		if (files?.size == 1) {
 			try {
@@ -29,8 +29,8 @@ fun main(args: Array<String>) {
 			} catch (ex: IOException) {
 			}
 		}
-		if (!opened) {
-			controller.addProject(Project.newBuilder(), null)
-		}
+	}
+	if (!opened) {
+		controller.addProject(Project.newBuilder(), null)
 	}
 }

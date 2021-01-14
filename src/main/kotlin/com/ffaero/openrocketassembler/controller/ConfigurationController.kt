@@ -1,7 +1,6 @@
 package com.ffaero.openrocketassembler.controller
 
 import com.ffaero.openrocketassembler.FileFormat
-import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.model.ComponentFile
 import com.ffaero.openrocketassembler.model.HistoryTransaction
 import com.ffaero.openrocketassembler.model.proto.Bug8188OuterClass.Bug8188
@@ -192,6 +191,14 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 	}
 	
 	fun isEditingAny() = editing.any { it }
+
+	private fun fileForConfig(configIndex: Int): File {
+		val model = proj.model.getConfigurationsBuilder(configIndex)
+		return File(proj.app.settings.tempDir, String.format("%08X-%s.ork", model.hashCode(), model.name))
+	}
+
+	internal val tempInUse: Set<File>
+			get() = editing.mapIndexedNotNull { idx, b -> if (b) { fileForConfig(idx) } else { null } }.toSet()
 	
 	fun edit(configIndex: Int) {
 		if (editing[configIndex]) {
@@ -199,7 +206,7 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 		}
 		editing[configIndex] = true
 		val model = proj.model.getConfigurationsBuilder(configIndex)
-		val file = FileSystem.getTempFile(model, model.name + ".ork")
+		val file = fileForConfig(configIndex)
 		OpenRocketOutputStream(FileOutputStream(file)).use { out ->
 			OpenRocketInputStream(getFileOutlineAt(configIndex).newInput()).use { outlineIn ->
 				while (true) {

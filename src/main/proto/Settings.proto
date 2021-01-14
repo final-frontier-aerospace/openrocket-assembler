@@ -1,0 +1,28 @@
+syntax = "proto3";
+package com.ffaero.openrocketassembler.model.proto;
+
+message Settings {
+    // General Settings
+    uint32 historyLength = 1;
+    uint32 initialWidth = 2;
+    uint32 initialHeight = 3;
+    bool openFromCWD = 4;
+    uint64 openrocketUpdatePeriod = 5;
+    // Storage Settings
+    string initialDir = 6;
+    string cacheDir = 7;
+    string tempDir = 8;
+    // Java Settings
+    string lookAndFeel = 9;
+    string javaPath = 10;
+    bool enableUnsafeUI = 11;
+    // Disable Warnings
+    bool warnDifferentVersion = 12;
+    bool warnFileExists = 13;
+    bool warnTemplateOpen = 14;
+    bool warnConfigOpen = 15;
+    bool warnUnsavedChanges = 16;
+    bool warnInvalidReference = 17;
+    bool warnRelocate = 18;
+    bool warnEmptyData = 19;
+}

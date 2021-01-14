@@ -2,8 +2,8 @@ package com.ffaero.openrocketassembler.controller
 
 import com.ffaero.openrocketassembler.model.HistoryTransaction
 
-class HistoryController : DispatcherBase<HistoryListener, HistoryListenerList>(HistoryListenerList()) {
-    private val history = ArrayList<HistoryTransaction>()
+class HistoryController(private val app: ApplicationController) : DispatcherBase<HistoryListener, HistoryListenerList>(HistoryListenerList()) {
+    private val history = ArrayDeque<HistoryTransaction>()
     private var index = 0
     private var lastSavedIndex = 0
     private var lastFileModified = false
@@ -51,11 +51,20 @@ class HistoryController : DispatcherBase<HistoryListener, HistoryListenerList>(H
         }
     }
 
+    private fun trim() {
+        while (history.size > app.settings.historyLength) {
+            history.removeFirst()
+            --index
+            --lastSavedIndex
+        }
+    }
+
     internal fun perform(transact: HistoryTransaction) {
         transact.run()
         while (history.size > index) {
-            history.removeAt(history.size - 1)
+            history.removeLast()
         }
+        trim()
         history.add(transact)
         index = history.size
         if (lastSavedIndex >= index) {
@@ -74,5 +83,11 @@ class HistoryController : DispatcherBase<HistoryListener, HistoryListenerList>(H
     internal fun afterSave() {
         lastSavedIndex = history.size
         dispatchEvent()
+    }
+
+    init {
+        app.settings.addListener(object : SettingAdapter() {
+            override fun onSettingsUpdated(sender: SettingController) = trim()
+        })
     }
 }

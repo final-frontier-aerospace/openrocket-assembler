@@ -8,14 +8,22 @@ import javax.swing.SwingUtilities
 
 open class MouseHierarchyTrampoline : MouseListener {
 	companion object {
-		private val eventEnabled = Component::class.java.getDeclaredMethod("eventEnabled", AWTEvent::class.java).apply {
-			isAccessible = true
-		}
+		private val eventEnabled = Component::class.java.getDeclaredMethod("eventEnabled", AWTEvent::class.java)
+	}
+
+	private var enabled = false
+
+	fun enable() {
+		eventEnabled.isAccessible = true
+		enabled = true
 	}
 	
 	protected open fun proxyEvent(e: MouseEvent): Boolean = true
 	
 	private fun event(e: MouseEvent?) {
+		if (!enabled) {
+			return
+		}
 		val source = e?.source
 		if (source == null || source !is Component || !proxyEvent(e)) {
 			return

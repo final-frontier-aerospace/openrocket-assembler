@@ -1,6 +1,8 @@
 package com.ffaero.openrocketassembler.controller.actions
 
 import com.ffaero.openrocketassembler.controller.ApplicationController
+import com.ffaero.openrocketassembler.controller.SettingAdapter
+import com.ffaero.openrocketassembler.controller.SettingController
 import com.ffaero.openrocketassembler.model.GitHubRelease
 import com.ffaero.openrocketassembler.model.GitHubReleaseAsset
 import com.ffaero.openrocketassembler.model.proto.OpenRocketVersionOuterClass.OpenRocketVersion
@@ -12,8 +14,13 @@ import java.util.*
 
 class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 	companion object {
-		private const val updatePeriod = 1000 * 60 * 60 * 24 * 7
 		private val gson = Gson()
+	}
+
+	private val settingsListener = object : SettingAdapter() {
+		override fun onSettingsUpdated(sender: SettingController) {
+			enqueueAction(sender.app, sender.app.cache.openRocketVersionsLastUpdate + sender.openrocketUpdatePeriod)
+		}
 	}
 	
 	override fun runAction(controller: ApplicationController) {
@@ -69,13 +76,20 @@ class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 				controller.cache.openRocketVersionsLastUpdate = now
 				controller.writeCache()
 				controller.openrocket.fireUpdated()
-				enqueueAction(controller, now + updatePeriod)
+				enqueueAction(controller, now + controller.settings.openrocketUpdatePeriod)
 			}
 		}
 	}
 	
 	fun checkNow(controller: ApplicationController) = enqueueAction(controller, 0)
 
-	override fun addListeners(controller: ApplicationController) = enqueueAction(controller, controller.cache.openRocketVersionsLastUpdate + updatePeriod)
-	override fun removeListeners(controller: ApplicationController) = dequeueAction(controller)
+	override fun addListeners(controller: ApplicationController) {
+		settingsListener.onSettingsUpdated(controller.settings)
+		controller.settings.addListener(settingsListener)
+	}
+
+	override fun removeListeners(controller: ApplicationController) {
+		controller.settings.removeListener(settingsListener)
+		dequeueAction(controller)
+	}
 }

@@ -1,7 +1,6 @@
 package com.ffaero.openrocketassembler.controller
 
 import com.ffaero.openrocketassembler.FileFormat
-import com.ffaero.openrocketassembler.FileSystem
 import com.ffaero.openrocketassembler.model.HistoryTransaction
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import com.google.protobuf.ByteString
@@ -12,7 +11,7 @@ import java.io.FileOutputStream
 class ProjectController(val app: ApplicationController, internal val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
 	private var stopped = false
 
-	internal val history = HistoryController()
+	internal val history = HistoryController(app)
 	val components = ComponentController(this)
 	val configurations = ConfigurationController(this)
 	
@@ -124,13 +123,23 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 	private var _editingComponentTemplate = false
 	val editingComponentTemplate
 			get() = _editingComponentTemplate
+
+	private val templateFile: File
+			get() = File(app.settings.tempDir, String.format("%08X-template.ork", hashCode()))
+
+	internal val tempInUse: Set<File>
+			get() = if (editingComponentTemplate) {
+				configurations.tempInUse.plus(templateFile)
+			} else {
+				configurations.tempInUse
+			}
 	
 	fun editComponentTemplate() {
 		if (_editingComponentTemplate) {
 			return
 		}
 		_editingComponentTemplate = true
-		val file = FileSystem.getTempFile(this, "template.ork")
+		val file = templateFile
 		FileOutputStream(file).use {
 			componentTemplate.writeTo(it)
 		}

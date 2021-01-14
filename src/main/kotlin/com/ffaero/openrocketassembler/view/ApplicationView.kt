@@ -1,17 +1,13 @@
 package com.ffaero.openrocketassembler.view
 
 import com.ffaero.openrocketassembler.FileFormat
-import com.ffaero.openrocketassembler.controller.HistoryAdapter
-import com.ffaero.openrocketassembler.controller.HistoryController
-import com.ffaero.openrocketassembler.controller.ProjectAdapter
-import com.ffaero.openrocketassembler.controller.ProjectController
+import com.ffaero.openrocketassembler.controller.*
 import com.ffaero.openrocketassembler.view.menu.EditMenu
 import com.ffaero.openrocketassembler.view.menu.FileMenu
 import com.ffaero.openrocketassembler.view.menu.OpenRocketMenu
 import com.ffaero.openrocketassembler.view.menu.WindowMenu
-import java.awt.Dimension
+import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.awt.event.WindowListener
 import java.io.File
 import java.io.IOException
 import javax.swing.*
@@ -19,18 +15,8 @@ import javax.swing.filechooser.FileNameExtensionFilter
 
 class ApplicationView(internal val view: ViewManager, private val proj: ProjectController) {
 	private val frame = JFrame().apply {
-		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 		defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
-		preferredSize = Dimension(1024, 768)
-		size = preferredSize
-		addWindowListener(object : WindowListener {
-			override fun windowActivated(e: WindowEvent?) = Unit
-			override fun windowClosed(e: WindowEvent?) = Unit
-			override fun windowDeactivated(e: WindowEvent?) = Unit
-			override fun windowDeiconified(e: WindowEvent?) = Unit
-			override fun windowIconified(e: WindowEvent?) = Unit
-			override fun windowOpened(e: WindowEvent?) = Unit
-			
+		addWindowListener(object : WindowAdapter() {
 			override fun windowClosing(e: WindowEvent?) = close()
 		})
 		contentPane.apply {
@@ -52,7 +38,6 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 	}
 	
 	internal val fileChooser = JFileChooser().apply {
-		currentDirectory = File(".")
 		fileFilter = FileNameExtensionFilter("OpenRocket Assembly File (*." + FileFormat.extension + ")", FileFormat.extension)
 	}
 
@@ -65,7 +50,7 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 					if (!file.name.contains('.')) {
 						file = File(file.path + "." + FileFormat.extension)
 					}
-					if (file.exists()) {
+					if (file.exists() && proj.app.settings.warnFileExists) {
 						if (JOptionPane.showConfirmDialog(frame, "File already exists.  Overwrite?", title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
 							file = null
 						}
@@ -86,17 +71,17 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 	}
 	
 	fun closeThen(title: String, action: String, func: Runnable) {
-		if (proj.editingComponentTemplate) {
+		if (proj.editingComponentTemplate && proj.app.settings.warnTemplateOpen) {
 			if (JOptionPane.showConfirmDialog(frame, "Template is still open in OpenRocket.\nAll changes to it will be lost if you continue $action.\nContinue?", title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
 				return
 			}
 		}
-		if (proj.configurations.isEditingAny()) {
+		if (proj.configurations.isEditingAny() && proj.app.settings.warnConfigOpen) {
 			if (JOptionPane.showConfirmDialog(frame, "At least one configuration is still open in OpenRocket.\nAll changes to simulations and other data will be lost if you continue $action.\nContinue?", title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
 				return
 			}
 		}
-		if (proj.history.fileModified) {
+		if (proj.history.fileModified && proj.app.settings.warnUnsavedChanges) {
 			when (JOptionPane.showConfirmDialog(frame, "Project has unsaved changes.\nSave before $action?", title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)) {
 				JOptionPane.YES_OPTION -> {
 					if (!saveProject(proj.file, title)) {
@@ -155,11 +140,22 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 			onStatus(proj.history, proj.history.fileModified)
 			proj.history.addListener(this)
 		}
+		val settingListener = object : SettingAdapter() {
+			override fun onSettingsUpdated(sender: SettingController) {
+				frame.preferredSize = sender.initialSize
+				fileChooser.currentDirectory = sender.initialDir
+			}
+		}.apply {
+			onSettingsUpdated(proj.app.settings)
+			frame.size = frame.preferredSize
+			proj.app.settings.addListener(this)
+		}
 		proj.addListener(object : ProjectAdapter() {
 			override fun onStop(sender: ProjectController) {
 				frame.dispose()
 				proj.removeListener(this)
 				proj.history.removeListener(historyListener)
+				proj.app.settings.removeListener(settingListener)
 			}
 
 			override fun onFileChange(sender: ProjectController, file: File?) = updateTitle(proj.history.fileModified, file)
