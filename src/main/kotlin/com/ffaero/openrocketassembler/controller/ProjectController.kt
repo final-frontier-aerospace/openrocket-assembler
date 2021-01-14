@@ -4,11 +4,16 @@ import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.model.HistoryTransaction
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import com.google.protobuf.ByteString
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
 class ProjectController(val app: ApplicationController, internal val model: Project.Builder, private var file_: File?) : DispatcherBase<ProjectListener, ProjectListenerList>(ProjectListenerList()) {
+	companion object {
+		private val log = LoggerFactory.getLogger(ProjectController::class.java)
+	}
+
 	private var stopped = false
 
 	internal val history = HistoryController(app)
@@ -79,6 +84,12 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 			throw IllegalStateException("Cannot stop a project that has already been stopped")
 		}
 		stopped = true
+		val file = file
+		if (file != null) {
+			log.info("Closing project {}", file.absolutePath)
+		} else {
+			log.info("Closing new project")
+		}
 		listener.onStop(this)
 		app.removeProject(this)
 		app.actions.removeListeners(app.actions.projectActions, this)
@@ -92,12 +103,14 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 	}
 	
 	fun reset() {
+		log.info("Resetting project")
 		file = null
 		model.clear()
 		afterLoad(null)
 	}
 	
 	fun load(file: File) {
+		log.info("Loading project from {}", file.absolutePath)
 		FileInputStream(file).use {
 			model.clear()
 			model.mergeFrom(it)
@@ -106,6 +119,7 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 	}
 	
 	fun save(file: File) {
+		log.info("Saving project to {}", file.absolutePath)
 		FileOutputStream(file).use {
 			model.version = FileFormat.version
 			components.beforeSave(file, model)
@@ -143,7 +157,9 @@ class ProjectController(val app: ApplicationController, internal val model: Proj
 		FileOutputStream(file).use {
 			componentTemplate.writeTo(it)
 		}
+		log.info("Launching {} to edit {}", openRocketVersion, file.absolutePath)
 		app.openrocket.launch(openRocketVersion, file.absolutePath) {
+			log.info("Processing changes to {}", file.absolutePath)
 			FileInputStream(file).use {
 				componentTemplate = ByteString.readFrom(it)
 			}

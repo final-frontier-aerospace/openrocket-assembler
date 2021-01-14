@@ -2,6 +2,7 @@ package com.ffaero.openrocketassembler.controller
 
 import com.ffaero.openrocketassembler.model.proto.SettingsOuterClass.Settings
 import net.harawata.appdirs.AppDirsFactory
+import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.io.File
 import java.io.FileInputStream
@@ -11,6 +12,7 @@ import javax.swing.UIManager
 
 class SettingController(val app: ApplicationController) : DispatcherBase<SettingListener, SettingListenerList>(SettingListenerList()) {
     companion object {
+        private val log = LoggerFactory.getLogger(SettingController::class.java)
         private const val publisher = "ffaero"
         private const val application = "openrocketassembler"
         private const val version = "1.0"
@@ -31,6 +33,10 @@ class SettingController(val app: ApplicationController) : DispatcherBase<Setting
             } else {
                 "javaw"
             }
+            log.info("Default cache dir: {}", defCacheDir)
+            log.info("Default temp dir: {}", defTempDir)
+            log.info("Default java path: {}", defJavaPath)
+            log.info("Settings file path: {}", settingsFile)
         }
 
         private val desc = Settings.getDescriptor()
@@ -63,11 +69,35 @@ class SettingController(val app: ApplicationController) : DispatcherBase<Setting
 
     fun load() {
         try {
-            FileInputStream(settingsFile).use {
-                model.clear()
-                model.mergeFrom(it)
+            if (settingsFile.exists()) {
+                FileInputStream(settingsFile).use {
+                    model.clear()
+                    model.mergeFrom(it)
+                }
+                log.info("Settings loaded")
+                log.info("History length: {}", historyLength)
+                log.info("Initial size: {}x{}", initialWidth, initialHeight)
+                log.info("Open from CWD: {}", openFromCWD)
+                log.info("OpenRocket update period: {}", openrocketUpdatePeriod)
+                log.info("Initial dir: {}", initialDir.absolutePath)
+                log.info("Cache dir: {}", cacheDir.absolutePath)
+                log.info("Temp dir: {}", tempDir.absolutePath)
+                log.info("Look and feel: {}", lookAndFeel)
+                log.info("Java path: {}", javaPath)
+                log.info("Enable unsafe UI: {}", enableUnsafeUI)
+                log.info("Warn different version: {}", warnDifferentVersion)
+                log.info("Warn file exists: {}", warnFileExists)
+                log.info("Warn template open: {}", warnTemplateOpen)
+                log.info("Warn config open: {}", warnConfigOpen)
+                log.info("Warn unsaved changes: {}", warnUnsavedChanges)
+                log.info("Warn invalid reference: {}", warnInvalidReference)
+                log.info("Warn relocate: {}", warnRelocate)
+                log.info("Warn empty data: {}", warnEmptyData)
+            } else {
+                log.info("Settings file not found")
             }
         } catch (ex: IOException) {
+            log.warn("Error reading settings file", ex)
         }
     }
 
@@ -77,6 +107,7 @@ class SettingController(val app: ApplicationController) : DispatcherBase<Setting
                 model.build().writeTo(it)
             }
         } catch (ex: IOException) {
+            log.error("Error saving settings file", ex)
         }
         listener.onSettingsUpdated(this)
     }

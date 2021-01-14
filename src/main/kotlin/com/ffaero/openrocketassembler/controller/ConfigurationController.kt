@@ -8,11 +8,16 @@ import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.Config
 import com.ffaero.openrocketassembler.model.proto.ConfigurationOuterClass.ConfigurationOrBuilder
 import com.google.protobuf.ByteString
 import org.apache.commons.io.IOUtils
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
 class ConfigurationController(val proj: ProjectController) : DispatcherBase<ConfigurationListener, ConfigurationListenerList>(ConfigurationListenerList()) {
+	companion object {
+		private val log = LoggerFactory.getLogger(ConfigurationController::class.java)
+	}
+
 	val names: List<String>
 			get() = proj.model.configurationsList.map { it.name }
 	
@@ -202,8 +207,10 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 	
 	fun edit(configIndex: Int) {
 		if (editing[configIndex]) {
+			log.info("Not opening assembly as it is already open")
 			return
 		}
+		log.info("Generating OpenRocket assembly")
 		editing[configIndex] = true
 		val model = proj.model.getConfigurationsBuilder(configIndex)
 		val file = fileForConfig(configIndex)
@@ -240,7 +247,9 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 				}
 			}
 		}
+		log.info("Launching {} to edit {}", proj.openRocketVersion, file.absolutePath)
 		proj.app.openrocket.launch(proj.openRocketVersion, file.absolutePath) {
+			log.info("Processing changes to {}", file.absolutePath)
 			val bs = ByteString.newOutput()
 			OpenRocketOutputStream(bs).use { out ->
 				OpenRocketInputStream(FileInputStream(file)).use { input ->
@@ -264,6 +273,7 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 			file.delete()
 			setFileOutlineAt(configIndex, bs.toByteString())
 			editing[configIndex] = false
+			log.info("Changes to {} processed.", file.absolutePath)
 		}
 	}
 }

@@ -6,6 +6,7 @@ import com.ffaero.openrocketassembler.view.menu.EditMenu
 import com.ffaero.openrocketassembler.view.menu.FileMenu
 import com.ffaero.openrocketassembler.view.menu.OpenRocketMenu
 import com.ffaero.openrocketassembler.view.menu.WindowMenu
+import org.slf4j.LoggerFactory
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.File
@@ -14,6 +15,10 @@ import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class ApplicationView(internal val view: ViewManager, private val proj: ProjectController) {
+	companion object {
+		private val log = LoggerFactory.getLogger(ApplicationView::class.java)
+	}
+
 	private val frame = JFrame().apply {
 		defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
 		addWindowListener(object : WindowAdapter() {
@@ -64,6 +69,7 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 				proj.file = file
 				return true
 			} catch (ex: IOException) {
+				log.warn("Could not save file", ex)
 				JOptionPane.showMessageDialog(frame, "Could not save file:\n" + ex.message, title, JOptionPane.ERROR_MESSAGE)
 			}
 		}
@@ -133,6 +139,7 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 			toFront()
 			requestFocus()
 			state = JFrame.NORMAL
+			log.info("Window opened")
 		}
 		val historyListener = object : HistoryAdapter() {
 			override fun onStatus(sender: HistoryController, modified: Boolean) = updateTitle(modified, proj.file)

@@ -5,6 +5,7 @@ import com.ffaero.openrocketassembler.controller.ComponentController
 import com.ffaero.openrocketassembler.controller.SettingAdapter
 import com.ffaero.openrocketassembler.controller.SettingController
 import com.ffaero.openrocketassembler.model.TemplateFile
+import org.slf4j.LoggerFactory
 import java.awt.EventQueue
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
@@ -20,6 +21,10 @@ import javax.swing.event.PopupMenuListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class ComponentList(private val view: EditorPanel, private val comp: ComponentController) : ListView<ComponentListItem, File>() {
+	companion object {
+		private val log = LoggerFactory.getLogger(ComponentList::class.java)
+	}
+
 	private val compListener = object : ComponentAdapter() {
 		override fun onComponentsReset(sender: ComponentController, components: List<File>) {
 			doReset(components)
@@ -27,6 +32,7 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 				EventQueue.invokeLater {
 					components.forEachIndexed { idx, it ->
 						if (!it.exists()) {
+							log.info("Invalid reference: {} ({})", it.absolutePath, it.path)
 							var message = "File referenced in project was not found:\n" + it.path
 							var type = JOptionPane.QUESTION_MESSAGE
 							var fixed = false
@@ -46,6 +52,7 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 													message = "File is already in project:\n" + file.path
 													type = JOptionPane.ERROR_MESSAGE
 												} else {
+													log.info("Updating reference to {}", file.absolutePath)
 													comp.change(idx, file)
 													fixed = true
 												}
@@ -81,18 +88,22 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 	
 	private fun getItem(e: ActionEvent?): ComponentListItem? {
 		if (e == null) {
+			log.warn("Null ActionEvent")
 			return null
 		}
 		val src = e.source
 		if (src !is JMenuItem) {
+			log.warn("Invalid source: {}", src)
 			return null
 		}
 		val ctx = src.parent
 		if (ctx !is JPopupMenu) {
+			log.warn("Invalid source parent: {}", ctx)
 			return null
 		}
 		val inv = ctx.invoker
 		if (inv !is ComponentListItem) {
+			log.warn("Invalid popup invoker: {}", inv)
 			return null
 		}
 		return inv
@@ -225,14 +236,17 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 		addPopupMenuListener(object : PopupMenuListener {
 			private fun item(e: PopupMenuEvent?): ComponentListItem? {
 				if (e == null) {
+					log.warn("Null PopupMenuEvent")
 					return null
 				}
 				val src = e.source
 				if (src !is JPopupMenu) {
+					log.warn("Invalid source: {}", src)
 					return null
 				}
 				val item = src.invoker
 				if (item !is ComponentListItem) {
+					log.warn("Invalid popup invoker: {}", item)
 					return null
 				}
 				return item
@@ -274,6 +288,7 @@ class ComponentList(private val view: EditorPanel, private val comp: ComponentCo
 	private val mouseListener = object : MouseAdapter() {
 		override fun mouseReleased(e: MouseEvent?) {
 			if (e == null) {
+				log.warn("Null MouseEvent")
 				return
 			}
 			if (e.isPopupTrigger) {

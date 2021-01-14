@@ -3,6 +3,7 @@ package com.ffaero.openrocketassembler.view
 import com.ffaero.openrocketassembler.controller.ApplicationAdapter
 import com.ffaero.openrocketassembler.controller.ApplicationController
 import com.ffaero.openrocketassembler.controller.ProjectController
+import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.awt.EventQueue
 import java.awt.event.ComponentAdapter
@@ -15,6 +16,7 @@ import kotlin.math.abs
 
 class EditorPanel(val app: ApplicationView, private val proj: ProjectController) : JSplitPane(HORIZONTAL_SPLIT) {
 	companion object {
+		private val log = LoggerFactory.getLogger(EditorPanel::class.java)
 		private const val maxRoundingErrorPx = 10
 	}
 	
@@ -51,11 +53,13 @@ class EditorPanel(val app: ApplicationView, private val proj: ProjectController)
 		addPropertyChangeListener(DIVIDER_LOCATION_PROPERTY, object : PropertyChangeListener {
 			override fun propertyChange(evt: PropertyChangeEvent?) {
 				if (evt == null) {
+					log.warn("Null PropertyChangeEvent")
 					return
 				}
 				val old = evt.oldValue
 				val new = evt.newValue
 				if (old !is Int || new !is Int) {
+					log.warn("Property value not int: {}, {}", old, new)
 					return
 				}
 				val target = targetDividerLocPx(proj.app.windowSplit)

@@ -8,12 +8,14 @@ import com.ffaero.openrocketassembler.model.GitHubReleaseAsset
 import com.ffaero.openrocketassembler.model.proto.OpenRocketVersionOuterClass.OpenRocketVersion
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
+import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
 import java.net.URL
 import java.util.*
 
 class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 	companion object {
+		private val log = LoggerFactory.getLogger(OpenRocketUpdateCheck::class.java)
 		private val gson = Gson()
 	}
 
@@ -69,8 +71,10 @@ class OpenRocketUpdateCheck : ActionBase<ApplicationController>() {
 					}
 				})
 				controller.cache.clearOpenRocketVersions()
+				log.info("Found OpenRocket versions:")
 				list.forEach {
 					controller.cache.addOpenRocketVersions(OpenRocketVersion.newBuilder().setName(it.first.name).setFilename(it.second.name).setDownloadURL(it.second.downloadURL).build())
+					log.info("- {}", it.first.name)
 				}
 				val now = System.currentTimeMillis()
 				controller.cache.openRocketVersionsLastUpdate = now

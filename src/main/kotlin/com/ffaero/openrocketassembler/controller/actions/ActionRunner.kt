@@ -1,10 +1,15 @@
 package com.ffaero.openrocketassembler.controller.actions
 
 import com.ffaero.openrocketassembler.controller.DispatcherBase
+import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
 class ActionRunner {
+	companion object {
+		private val log = LoggerFactory.getLogger(ActionRunner::class.java)
+	}
+
 	private val queue = ActionQueue()
 	private var run = true
 	private val lock = ReentrantLock()
@@ -12,6 +17,7 @@ class ActionRunner {
 	
 	private val thread = Thread(object : Runnable {
 		override fun run() {
+			log.info("ActionRunner thread starting up")
 			lock.lock()
 			try {
 				while (true) {
@@ -32,18 +38,19 @@ class ActionRunner {
 					try {
 						task!!.run()
 					} catch (ex: Exception) {
-						ex.printStackTrace()
+						log.error("Task encountered exception", ex)
 					} finally {
 						lock.lock()
 					}
 				}
 			} catch (ex: Exception) {
-				ex.printStackTrace()
+				log.error("ActionRunner thread encountered exception", ex)
 			} finally {
 				lock.unlock()
 			}
+			log.info("ActionRunner thread shutting down")
 		}
-	}).apply {
+	}, "ActionRunner").apply {
 		start()
 	}
 	
@@ -68,6 +75,7 @@ class ActionRunner {
 	}
 	
 	fun stop() {
+		log.info("Requesting ActionRunner thread stop")
 		lock.lock()
 		try {
 			run = false

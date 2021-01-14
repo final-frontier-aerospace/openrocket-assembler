@@ -5,12 +5,17 @@ import com.ffaero.openrocketassembler.controller.ProjectController
 import com.ffaero.openrocketassembler.view.ApplicationView
 import com.ffaero.openrocketassembler.view.SettingsWindow
 import com.google.protobuf.InvalidProtocolBufferException
+import org.slf4j.LoggerFactory
 import java.awt.event.KeyEvent
 import java.io.FileNotFoundException
 import java.io.IOException
 import javax.swing.*
 
 class FileMenu(private val view: ApplicationView, private val proj: ProjectController) : JMenu("File") {
+	companion object {
+		private val log = LoggerFactory.getLogger(FileMenu::class.java)
+	}
+
 	init {
 		JMenuItem("New").apply {
 			accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK)
@@ -44,10 +49,13 @@ class FileMenu(private val view: ApplicationView, private val proj: ProjectContr
 									}
 								}
 							} catch (ex: FileNotFoundException) {
+								log.warn("Could not find file", ex)
 								JOptionPane.showMessageDialog(parent, "Could not find file:\n" + file.path, "Open", JOptionPane.ERROR_MESSAGE)
 							} catch (ex: InvalidProtocolBufferException) {
+								log.warn("Could not read file", ex)
 								JOptionPane.showMessageDialog(parent, "Could not read file:\nFile corruption detected:\n" + ex.message, "Open", JOptionPane.ERROR_MESSAGE)
 							} catch (ex: IOException) {
+								log.warn("Could not read file", ex)
 								JOptionPane.showMessageDialog(parent, "Could not read file:\n" + ex.message, "Open", JOptionPane.ERROR_MESSAGE)
 							}
 						}

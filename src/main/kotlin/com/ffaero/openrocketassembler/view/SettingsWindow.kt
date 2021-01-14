@@ -3,6 +3,7 @@ package com.ffaero.openrocketassembler.view
 import com.ffaero.openrocketassembler.controller.SettingAdapter
 import com.ffaero.openrocketassembler.controller.SettingController
 import com.ffaero.openrocketassembler.model.TimeSpan
+import org.slf4j.LoggerFactory
 import java.awt.BorderLayout
 import java.awt.Font
 import java.awt.event.KeyEvent
@@ -18,6 +19,7 @@ import kotlin.math.abs
 
 class SettingsWindow(private val view: ViewManager, private val settings: SettingController) : Closeable {
     companion object {
+        private val log = LoggerFactory.getLogger(SettingsWindow::class.java)
         private const val BASELINE = SpringLayout.BASELINE
         private const val NORTH = SpringLayout.NORTH
         private const val EAST = SpringLayout.EAST
@@ -377,15 +379,24 @@ class SettingsWindow(private val view: ViewManager, private val settings: Settin
         }
     }
 
-    private fun delete(root: File, ignore: HashSet<String>) {
+    private fun delete(root: File, ignore: HashSet<String>): Boolean {
+        log.info("Deleting folder {}", root.absolutePath)
+        var empty = true
         root.listFiles()?.forEach {
             if (!ignore.contains(it.absolutePath)) {
                 if (it.isDirectory) {
-                    delete(it, ignore)
+                    if (!delete(it, ignore)) {
+                        return@forEach
+                    }
                 }
+                log.info("Deleting {}", it.absolutePath)
                 it.delete()
+            } else {
+                log.info("Ignoring in-use file {}", it.absolutePath)
+                empty = false
             }
         }
+        return empty
     }
 
     private fun empty(dir: String) {

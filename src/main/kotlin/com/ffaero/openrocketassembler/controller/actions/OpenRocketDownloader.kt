@@ -3,12 +3,17 @@ package com.ffaero.openrocketassembler.controller.actions
 import com.ffaero.openrocketassembler.controller.ProjectAdapter
 import com.ffaero.openrocketassembler.controller.ProjectController
 import org.apache.commons.io.IOUtils
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URL
 
 class OpenRocketDownloader : ActionBase<ProjectController>() {
+	companion object {
+		private val log = LoggerFactory.getLogger(OpenRocketDownloader::class.java)
+	}
+
 	private val projectListener = object : ProjectAdapter() {
 		override fun onOpenRocketVersionChange(sender: ProjectController, version: String) = enqueueAction(sender, 0)
 	}
@@ -28,7 +33,7 @@ class OpenRocketDownloader : ActionBase<ProjectController>() {
 						}
 						tmpFile.renameTo(file)
 					} catch (ex: IOException) {
-						ex.printStackTrace()
+						log.warn("Unable to download OpenRocket", ex)
 					}
 				}
 			}

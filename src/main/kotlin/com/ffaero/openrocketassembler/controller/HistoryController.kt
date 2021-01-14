@@ -1,8 +1,13 @@
 package com.ffaero.openrocketassembler.controller
 
 import com.ffaero.openrocketassembler.model.HistoryTransaction
+import org.slf4j.LoggerFactory
 
 class HistoryController(private val app: ApplicationController) : DispatcherBase<HistoryListener, HistoryListenerList>(HistoryListenerList()) {
+    companion object {
+        private val log = LoggerFactory.getLogger(HistoryController::class.java)
+    }
+
     private val history = ArrayDeque<HistoryTransaction>()
     private var index = 0
     private var lastSavedIndex = 0
@@ -36,6 +41,7 @@ class HistoryController(private val app: ApplicationController) : DispatcherBase
     fun undo() {
         if (index > 0) {
             val ent = history[index - 1]
+            log.info("Undoing action {}", ent.desc)
             ent.undo()
             --index
             dispatchEvent()
@@ -45,6 +51,7 @@ class HistoryController(private val app: ApplicationController) : DispatcherBase
     fun redo() {
         if (index < history.size) {
             val ent = history[index]
+            log.info("Redoing action {}", ent.desc)
             ent.run()
             ++index
             dispatchEvent()
@@ -60,6 +67,7 @@ class HistoryController(private val app: ApplicationController) : DispatcherBase
     }
 
     internal fun perform(transact: HistoryTransaction) {
+        log.info("Performing operation {}", transact.desc)
         transact.run()
         while (history.size > index) {
             history.removeLast()

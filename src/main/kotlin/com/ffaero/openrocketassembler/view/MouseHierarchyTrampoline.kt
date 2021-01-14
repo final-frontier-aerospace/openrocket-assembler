@@ -1,5 +1,6 @@
 package com.ffaero.openrocketassembler.view
 
+import org.slf4j.LoggerFactory
 import java.awt.AWTEvent
 import java.awt.Component
 import java.awt.event.MouseEvent
@@ -8,12 +9,18 @@ import javax.swing.SwingUtilities
 
 open class MouseHierarchyTrampoline : MouseListener {
 	companion object {
+		private val log = LoggerFactory.getLogger(MouseHierarchyTrampoline::class.java)
 		private val eventEnabled = Component::class.java.getDeclaredMethod("eventEnabled", AWTEvent::class.java)
+		private var logged = false
 	}
 
 	private var enabled = false
 
 	fun enable() {
+		if (!logged) {
+			logged = true
+			log.warn("Performing unsafe reflective operation")
+		}
 		eventEnabled.isAccessible = true
 		enabled = true
 	}
