@@ -1,6 +1,7 @@
 package com.ffaero.openrocketassembler
 
 import com.ffaero.openrocketassembler.controller.ApplicationController
+import com.ffaero.openrocketassembler.crash.CrashSetup
 import com.ffaero.openrocketassembler.model.proto.ProjectOuterClass.Project
 import com.ffaero.openrocketassembler.view.ViewManager
 import org.slf4j.LoggerFactory
@@ -10,6 +11,7 @@ import java.io.IOException
 fun main(args: Array<String>) {
 	val log = LoggerFactory.getLogger("com.ffaero.openrocketassembler.main")
 	val controller = ApplicationController()
+	CrashSetup.setup { controller.logControl.file }
 	ViewManager(controller)
 	var opened = false
 	args.forEach {

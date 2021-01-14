@@ -2,10 +2,7 @@ package com.ffaero.openrocketassembler.view
 
 import com.ffaero.openrocketassembler.FileFormat
 import com.ffaero.openrocketassembler.controller.*
-import com.ffaero.openrocketassembler.view.menu.EditMenu
-import com.ffaero.openrocketassembler.view.menu.FileMenu
-import com.ffaero.openrocketassembler.view.menu.OpenRocketMenu
-import com.ffaero.openrocketassembler.view.menu.WindowMenu
+import com.ffaero.openrocketassembler.view.menu.*
 import org.slf4j.LoggerFactory
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
@@ -132,6 +129,7 @@ class ApplicationView(internal val view: ViewManager, private val proj: ProjectC
 			add(EditMenu(proj))
 			add(OpenRocketMenu(proj))
 			add(WindowMenu(this@ApplicationView, proj))
+			add(HelpMenu())
 			frame.jMenuBar = this
 		}
 		frame.apply {
