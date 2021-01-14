@@ -90,7 +90,6 @@ class CrashReporter(private val file: File) {
         System.getenv().toSortedMap().forEach { (k, v) ->
             log.info("System.env[\"{}\"] = \"{}\"", k, v)
         }
-        log.info("Runtime.version = \"{}\"", Runtime.version())
         val rt = Runtime.getRuntime()
         log.info("Runtime.freeMemory = {}", rt.freeMemory())
         log.info("Runtime.maxMemory = {}", rt.maxMemory())

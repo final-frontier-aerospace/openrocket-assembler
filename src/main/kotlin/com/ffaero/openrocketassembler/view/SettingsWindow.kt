@@ -477,7 +477,7 @@ class SettingsWindow(private val view: ViewManager, private val settings: Settin
     init {
         view.addDialog(this)
         arrayOf(historyBox, initialHeightBox, initialWidthBox).forEach {
-            it.model = SpinnerNumberModel(it.value as Int, 1, Int.MAX_VALUE, 1)
+            it.model = SpinnerNumberModel(1, 1, Int.MAX_VALUE, 1)
             val editor = JSpinner.NumberEditor(it)
             it.editor = editor
             (editor.textField.formatter as? DefaultFormatter)?.commitsOnValidEdit = true
