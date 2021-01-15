@@ -225,7 +225,8 @@ class ConfigurationController(val proj: ProjectController) : DispatcherBase<Conf
 								while (true) {
 									val compEnt = compIn.getNextEntry() ?: break
 									if (compEnt.isRocketXML) {
-										doc.addSubcomponents(OpenRocketXML(UncloseableInputStream(compIn)).getSubcomponents())
+										val xmlIn = OpenRocketXML(UncloseableInputStream(compIn))
+										doc.addSubcomponents(xmlIn.getSubcomponents(), xmlIn.getSimulations())
 									} else {
 										out.putNextEntry(compEnt)
 										IOUtils.copy(UncloseableInputStream(compIn), UncloseableOutputStream(out))
